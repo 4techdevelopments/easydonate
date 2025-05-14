@@ -27,10 +27,13 @@ Projeto EasyDonate
    Acesse o aplicativo com o Vs Code vá em API/axios.ts
    Trocar o ip igual vou passar a baixo:
    
-   Usar ipconfig no cmd do windows para ver seu ipv4 e copiar até antes da porta. Ex: 192.168.0.1 e deixar com a porta 5062
+   Usar ipconfig no cmd do windows para ver seu ipv4 e copiar até antes da porta.
+   Ex: 192.168.0.1 e deixar com a porta 5062
+
+   Trocar o ip do baseURL pelo seu SEU_IP:5062
    ```
 
-6. Iniciando o projeto
+6. Iniciando o projeto (Aconselho usar o terminal do windows abrindo a pasta do projeto)
    ```bash
    npx expo start
    ```
