@@ -1,50 +1,44 @@
-# Welcome to your Expo app 👋
+# Passo a Passo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Projeto EasyDonate
 
-## Get started
+## O que fazer?
 
-1. Install dependencies
+1. Clonar repositório (Terminal do Vs Code)
 
    ```bash
-   npm install
+   git clone https://github.com/guilherme-rodrigues-de-queiroz/easydonate.git
    ```
 
-2. Start the app
+2. Installar dependencias (Terminal do Vs Code)
 
+   ```bash
+   npm i
+   ```
+
+3. Abrir API do Easy Donate
+   ```bash
+   Usar http ao invés de https para rodar a API
+   ```
+
+5. Configurar projeto para rodar com o Back-End
+
+   ```bash
+   Acesse o aplicativo com o Vs Code vá em API/axios.ts
+   Trocar o ip igual vou passar a baixo:
+   
+   Usar ipconfig no cmd do windows para ver seu ipv4 e copiar até antes da porta.
+   Ex: 192.168.0.1 e deixar com a porta 5062
+
+   Trocar o ip do baseURL pelo seu SEU_IP:5062
+   ```
+
+6. Iniciando o projeto (Aconselho usar o terminal do windows abrindo a pasta do projeto)
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+7. Iniciando o projeto limpando o cache
+   ```bash
+   npx expo start -c
+   ```
