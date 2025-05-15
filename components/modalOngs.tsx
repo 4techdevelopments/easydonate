@@ -5,9 +5,11 @@ import Colors from "./Colors";
 
 type ModalOngsProps = {
     handleClose: () => void;
+    goToOngViver: () => void;
 };
 
-export function ModalOngs({ handleClose }: ModalOngsProps) {
+export function ModalOngs({ handleClose, goToOngViver }: ModalOngsProps) {
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.WrapperModal}>
@@ -16,7 +18,7 @@ export function ModalOngs({ handleClose }: ModalOngsProps) {
                     <Text style={styles.TextLoc}>Localização das ONGs</Text>
 
                     <View style={styles.WrapperLocs}>
-                        <TouchableOpacity style={styles.OptionsLoc}>
+                        <TouchableOpacity style={styles.OptionsLoc} onPress={goToOngViver}>
                             <View style={styles.WrapperIcon}>
                                 <Ionicons name="location-sharp" size={40} color={Colors.ORANGE} />
                             </View>

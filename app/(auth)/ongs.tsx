@@ -13,8 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const REGIAO_INICIAL = {
     latitude: -23.3197,
     longitude: -51.1661,
-    latitudeDelta: 0.001,
-    longitudeDelta: 0.001,
+    latitudeDelta: 0.07,
+    longitudeDelta: 0.07,
 };
 
 const ong_viver = {
@@ -24,6 +24,7 @@ const ong_viver = {
 
 export default function Ongs() {
     const [visibleModal, setVisibleModal] = useState(false);
+    const [mapRegion, setMapRegion] = useState(REGIAO_INICIAL);
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -39,13 +40,24 @@ export default function Ongs() {
             </View>
         )
     }
+
+    const goToOngViver = () => {
+        setMapRegion({
+            latitude: -23.329989247504727,
+            longitude: -51.15615050407202,
+            latitudeDelta: 0.001,
+            longitudeDelta: 0.001,
+        });
+    };
+
     return (
         <PrivateRoute>
             <SafeAreaView style={{ flex: 1 }}>
                 <View style={{ flex: 1 }}>
                     <MapView
                         style={StyleSheet.absoluteFill}
-                        initialRegion={REGIAO_INICIAL}
+                        region={mapRegion}
+                        onRegionChangeComplete={(region) => setMapRegion(region)}
                         showsUserLocation={true}
                         showsMyLocationButton={true}
                     >
@@ -68,7 +80,8 @@ export default function Ongs() {
                     onRequestClose={() => setVisibleModal(false)}
                 >
                     <ModalOngs
-                        handleClose={() => setVisibleModal(false)}
+                        handleClose={() => setVisibleModal(false)} 
+                        goToOngViver={goToOngViver}
                     />
                 </Modal>
 
