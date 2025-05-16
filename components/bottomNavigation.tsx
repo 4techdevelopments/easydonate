@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default */
 import { useAuth } from '@/routes/AuthContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -27,10 +28,13 @@ function BottomNavigation() {
                     <Text style={pathname === '/home' ? styles.TextBtnsActive : styles.TextBtns}>Inicio</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.Buttons}>
-                    <Mao />
-                    <Text style={styles.TextBtns}>Doações</Text>
+                <TouchableOpacity style={styles.Buttons} onPress={() => router.push('/(auth)/doacoes')}>
+                    <Mao fill={pathname === '/doacoes' ? '#FC7100' : '#BEBEBE'} />
+                    <Text style={pathname === '/doacoes' ? styles.TextBtnsActive : styles.TextBtns}>
+                        Doações
+                    </Text>
                 </TouchableOpacity>
+
 
                 <TouchableOpacity style={styles.Buttons} onPress={() => router.push('/(auth)/ongs')}>
                     <Ionicons
@@ -83,7 +87,7 @@ const styles = StyleSheet.create({
     },
     TextBtnsActive: {
         fontSize: 10,
-        fontFamily: "Montserrat-Medium",
+        fontFamily: "Montserrat",
         color: Colors.ORANGE
     },
     IconActive: {
