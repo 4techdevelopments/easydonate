@@ -1,20 +1,94 @@
+import api from "@/api/axios";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import RadioSelector from "@/components/radioGroup";
 import { Entypo } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Cadastro() {
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [senha, setSenha] = useState('');
+    const [senha2, setSenha2] = useState('');
+    const [tipoUsuario, setTipoUsuario] = useState<string>('');
+    const [nome, setNome] = useState('');
+    const [cnpj, setCnpj] = useState('');
+    const [tipoAtividade, setTipoAtividade] = useState('');
+    const [descricaoMissao, setDescricaoMissao] = useState('');
+    const [cep, setCep] = useState('');
+    const [rua, setRua] = useState('');
+    const [numero, setNumero] = useState('');
+    const [complemento, setComplemento] = useState('');
+    const [bairro, setBairro] = useState('');
+    const [cidade, setCidade] = useState('');
+    const [estado, setEstado] = useState('');
+    const [ddd, setDdd] = useState('');
+    const [telefone, setTelefone] = useState('');
+    const [responsavelCadastro, setResponsavelCadastro] = useState('');
+    const [comprovanteRegistro, setComprovanteRegistro] = useState('');
+    const [selectedOption, setSelectedOption] = useState<string>('Doador(a)');
+
+    useEffect(() => {
+        if (selectedOption === 'Ong') {
+            setTipoUsuario('Ong');
+        } else {
+            setTipoUsuario('Doador');
+        }
+    }, [selectedOption]);
+
+    const handleCadastro = async () => {
+        if (senha != senha2) {
+            Alert.alert("Erro", "As senhas não coincidem!");
+            return;
+        }
+
+        try {
+            const response = await api.post('/Ong', {
+                email,
+                senha,
+                tipoUsuario,
+                nome,
+                cnpj,
+                tipoAtividade,
+                descricaoMissao,
+                cep,
+                rua,
+                numero,
+                complemento,
+                bairro,
+                cidade,
+                estado,
+                ddd,
+                telefone,
+                responsavelCadastro,
+                comprovanteRegistro,
+            });
+
+            if (response.status === 201) {
+                Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
+            } else {
+                Alert.alert("Erro", response.data || "Erro desconhecido");
+            }
+
+        } catch (error: any) {
+            console.log("Erro:", error);
+            const msg = error.response?.data || "Erro ao realizar cadastro!";
+            Alert.alert("Erro", msg);
+        }
+    };
+
+    // [CARREGAR FONTS]
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
         "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
         "Montserrat-Medium": require("../../assets/fonts/Montserrat-Medium.ttf")
     });
 
+    // [SENHA VISIVEL]
     const [senhasVisiveis, setSenhasVisiveis] = useState<boolean[]>([false, false, false, false]);
 
     const alternarVisibilidadeSenha = (index: number) => {
@@ -25,8 +99,6 @@ export default function Cadastro() {
         });
     };
 
-    const router = useRouter();
-    const [selectedOption, setSelectedOption] = useState<string>('Doador(a)');
 
     if (!fontsLoaded) {
         return (
@@ -67,6 +139,11 @@ export default function Cadastro() {
                             <View style={styles.DivCadastroAll}>
                                 {selectedOption === "Doador(a)" && (
                                     <ScrollView horizontal={false} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
+
+                                        <View style={styles.DivCadastro}>
+                                            <Text style={styles.Labels}>Tipo Doador*</Text>
+
+                                        </View>
 
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Nome Completo*</Text>
@@ -238,6 +315,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Nome da organização"
                                                 maxLength={255}
+                                                value={nome}
+                                                onChangeText={setNome}
                                                 keyboardType="default"
                                                 textContentType="name"
                                                 style={styles.Input}
@@ -248,6 +327,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="00.000.000/0000-00"
                                                 maxLength={14}
+                                                value={cnpj}
+                                                onChangeText={setCnpj}
                                                 keyboardType="number-pad"
                                                 style={styles.Input}
                                             />
@@ -257,6 +338,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Tipo de atividade"
                                                 maxLength={255}
+                                                value={tipoAtividade}
+                                                onChangeText={setTipoAtividade}
                                                 keyboardType="default"
                                                 style={styles.Input}
                                             />
@@ -266,6 +349,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Descrição da missão"
                                                 maxLength={255}
+                                                value={descricaoMissao}
+                                                onChangeText={setDescricaoMissao}
                                                 keyboardType="default"
                                                 style={styles.Input}
                                             />
@@ -275,6 +360,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="00000-000"
                                                 maxLength={8}
+                                                value={cep}
+                                                onChangeText={setCep}
                                                 keyboardType="number-pad"
                                                 textContentType="name"
                                                 style={styles.Input}
@@ -286,6 +373,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="Endereço"
                                                     maxLength={255}
+                                                    value={rua}
+                                                    onChangeText={setRua}
                                                     keyboardType="default"
                                                     textContentType="streetAddressLine1"
                                                     style={styles.InputMedio}
@@ -293,6 +382,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="Nº"
                                                     maxLength={10}
+                                                    value={numero}
+                                                    onChangeText={setNumero}
                                                     keyboardType="number-pad"
                                                     style={styles.InputMini}
                                                 />
@@ -303,6 +394,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Complemento"
                                                 maxLength={255}
+                                                value={complemento}
+                                                onChangeText={setComplemento}
                                                 keyboardType="default"
                                                 textContentType="streetAddressLine2"
                                                 style={styles.Input}
@@ -313,6 +406,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Bairro"
                                                 maxLength={255}
+                                                value={bairro}
+                                                onChangeText={setBairro}
                                                 keyboardType="default"
                                                 style={styles.Input}
                                             />
@@ -323,6 +418,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="Cidade"
                                                     maxLength={255}
+                                                    value={cidade}
+                                                    onChangeText={setCidade}
                                                     keyboardType="default"
                                                     textContentType="addressCity"
                                                     style={styles.InputMedio}
@@ -330,6 +427,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="UF"
                                                     maxLength={2}
+                                                    value={estado}
+                                                    onChangeText={setEstado}
                                                     keyboardType="default"
                                                     textContentType="addressState"
                                                     style={styles.InputMini}
@@ -342,6 +441,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="DDD"
                                                     maxLength={2}
+                                                    value={ddd}
+                                                    onChangeText={setDdd}
                                                     keyboardType="number-pad"
                                                     textContentType="telephoneNumber"
                                                     style={styles.InputDdd}
@@ -349,6 +450,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="000000000"
                                                     maxLength={9}
+                                                    value={telefone}
+                                                    onChangeText={setTelefone}
                                                     keyboardType="number-pad"
                                                     textContentType="telephoneNumber"
                                                     style={styles.InputTel}
@@ -360,6 +463,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Email"
                                                 maxLength={255}
+                                                value={email}
+                                                onChangeText={setEmail}
                                                 keyboardType="email-address"
                                                 textContentType="emailAddress"
                                                 autoComplete="email"
@@ -371,6 +476,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Nome completo do responsável"
                                                 maxLength={255}
+                                                value={responsavelCadastro}
+                                                onChangeText={setResponsavelCadastro}
                                                 keyboardType="default"
                                                 textContentType="name"
                                                 style={styles.Input}
@@ -381,6 +488,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Comprovante de registro"
                                                 maxLength={255}
+                                                value={comprovanteRegistro}
+                                                onChangeText={setComprovanteRegistro}
                                                 keyboardType="default"
                                                 style={styles.Input}
                                             />
@@ -390,6 +499,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Digite sua senha"
                                                 maxLength={128}
+                                                value={senha}
+                                                onChangeText={setSenha}
                                                 keyboardType="default"
                                                 textContentType="password"
                                                 secureTextEntry={!senhasVisiveis[3]}
@@ -407,6 +518,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Repita sua senha"
                                                 maxLength={128}
+                                                value={senha2}
+                                                onChangeText={setSenha2}
                                                 keyboardType="default"
                                                 textContentType="password"
                                                 secureTextEntry={!senhasVisiveis[4]}
@@ -423,7 +536,7 @@ export default function Cadastro() {
                                 )}
                             </View>
 
-                            <TouchableOpacity style={styles.BtnCadastrar}>
+                            <TouchableOpacity style={styles.BtnCadastrar} onPress={handleCadastro}>
                                 <Text style={styles.BtnTextCadastrar}>Cadastrar</Text>
                             </TouchableOpacity>
                         </View>

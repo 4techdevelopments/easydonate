@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Login() {
+  // [CARREGAR FONTS]
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
     "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),

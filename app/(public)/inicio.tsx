@@ -2,11 +2,23 @@ import EasyDonateSvg from "@/components/easyDonateSvg";
 import { Inicio } from "@/constants/constants";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as SystemUI from "expo-system-ui";
+import { useEffect } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Index() {
+  const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    if (colorScheme === 'dark') {
+      SystemUI.setBackgroundColorAsync("#000000");
+    } else {
+      SystemUI.setBackgroundColorAsync("#F6F7F9");
+    }
+  }, [colorScheme]);
+
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
     "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),

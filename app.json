@@ -26,7 +26,7 @@
       "backgroundColor": "#F6F7F9"
     },
     "androidNavigationBar": {
-      "visible": "immersive",
+      "visible": "auto",
       "backgroundColor": "#F6F7F9",
       "barStyle": "dark-content"
     },
