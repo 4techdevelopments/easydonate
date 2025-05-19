@@ -27,10 +27,60 @@ export default function Cadastro() {
     const [cidade, setCidade] = useState('');
     const [estado, setEstado] = useState('');
     const [ddd, setDdd] = useState('');
-    const [telefone, setTelefone] = useState('');
+    const [numeroTel, setNumeroTel] = useState('');
     const [responsavelCadastro, setResponsavelCadastro] = useState('');
     const [comprovanteRegistro, setComprovanteRegistro] = useState('');
     const [selectedOption, setSelectedOption] = useState<string>('Doador(a)');
+
+    // [BUSCAR CEP]
+    useEffect(() => {
+        const buscarCep = async () => {
+            if (cep.length === 8) {
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await response.json();
+
+                    if (data.erro) {
+                        Alert.alert("Erro", "CEP não encontrado.");
+                        return;
+                    }
+
+                    setRua(data.logradouro || '');
+                    setComplemento(data.complemento || '');
+                    setBairro(data.bairro || '');
+                    setCidade(data.localidade || '');
+                    setEstado(data.uf || '');
+                } catch (error) {
+                    Alert.alert("Erro", "Não foi possível buscar o CEP.");
+                    console.error("Erro ao buscar CEP:", error);
+                }
+            }
+        };
+
+        buscarCep();
+    }, [cep]);
+
+    const resetCampos = () => {
+        setEmail('');
+        setSenha('');
+        setSenha2('');
+        setTipoUsuario('');
+        setNome('');
+        setCnpj('');
+        setTipoAtividade('');
+        setDescricaoMissao('');
+        setCep('');
+        setRua('');
+        setNumero('');
+        setComplemento('');
+        setBairro('');
+        setCidade('');
+        setEstado('');
+        setDdd('');
+        setNumeroTel('');
+        setResponsavelCadastro('');
+        setComprovanteRegistro('');
+    };
 
     useEffect(() => {
         if (selectedOption === 'Ong') {
@@ -40,43 +90,84 @@ export default function Cadastro() {
         }
     }, [selectedOption]);
 
+    // [CADASTRO]
     const handleCadastro = async () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const telefoneRegex = /^\d{8}$/;
+        const telefoneCelularRegex = /^\d{9}$/;
+        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+        if (email == null || tipoUsuario == null || nome == null || cnpj == null || tipoAtividade == null || cep == null || rua == null || numero == null || bairro == null || cidade == null || estado == null || ddd == null || numeroTel == null || responsavelCadastro == null || comprovanteRegistro == null || senha == null || senha2 == null) {
+            Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
+            return;
+        }
+
+        let bodyRequest: any = {
+            email,
+            senha,
+            tipoUsuario,
+            nome,
+            cnpj,
+            tipoAtividade,
+            descricaoMissao,
+            cep,
+            rua,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+            ddd,
+            responsavelCadastro,
+            comprovanteRegistro,
+        };
+
+        if (numeroTel.length <= 9 && numeroTel.length >= 8) {
+            if (telefoneCelularRegex.test(numeroTel)) {
+                bodyRequest.telefoneCelular = numeroTel;
+            } else if (telefoneRegex.test(numeroTel)) {
+                bodyRequest.telefone = numeroTel;
+            }
+        } else {
+            Alert.alert("Erro", "Informe um número de telefone/celular válido!");
+            return;
+        }
+
+
+        if (!emailRegex.test(email)) {
+            Alert.alert("Erro", "Digite um e-mail válido!");
+            return;
+        }
+
+        if (!senhaRegex.test(senha)) {
+            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            return;
+        }
+
         if (senha != senha2) {
             Alert.alert("Erro", "As senhas não coincidem!");
             return;
         }
 
         try {
-            const response = await api.post('/Ong', {
-                email,
-                senha,
-                tipoUsuario,
-                nome,
-                cnpj,
-                tipoAtividade,
-                descricaoMissao,
-                cep,
-                rua,
-                numero,
-                complemento,
-                bairro,
-                cidade,
-                estado,
-                ddd,
-                telefone,
-                responsavelCadastro,
-                comprovanteRegistro,
-            });
+            const response = await api.post('/Ong', bodyRequest);
 
             if (response.status === 201) {
                 Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-            } else {
-                Alert.alert("Erro", response.data || "Erro desconhecido");
+                resetCampos();
+                router.replace('/inicio');
             }
 
         } catch (error: any) {
-            console.log("Erro:", error);
-            const msg = error.response?.data || "Erro ao realizar cadastro!";
+            console.log("Erro", error);
+
+            let msg = "Erro ao realizar cadastro!";
+            if (typeof error.response?.data === 'string') {
+                msg = error.response.data;
+            } else if (error.response?.data?.message) {
+                msg = error.response.data.message;
+            }
+
             Alert.alert("Erro", msg);
         }
     };
@@ -100,6 +191,7 @@ export default function Cadastro() {
     };
 
 
+    // [LOADING ENQUANTO NÃO CARREGA AS FONTES]
     if (!fontsLoaded) {
         return (
             <View style={[styles.Container, { backgroundColor: Colors.BG }]}>
@@ -368,7 +460,7 @@ export default function Cadastro() {
                                             />
                                         </View>
                                         <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Endereço*</Text>
+                                            <Text style={styles.Labels}>Endereço* / Numero</Text>
                                             <View style={styles.WrapperDoisInputs}>
                                                 <TextInput
                                                     placeholder="Endereço"
@@ -450,8 +542,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="000000000"
                                                     maxLength={9}
-                                                    value={telefone}
-                                                    onChangeText={setTelefone}
+                                                    value={numeroTel}
+                                                    onChangeText={setNumeroTel}
                                                     keyboardType="number-pad"
                                                     textContentType="telephoneNumber"
                                                     style={styles.InputTel}
@@ -629,7 +721,7 @@ const styles = StyleSheet.create({
     DivCadastroAll: {
         //backgroundColor: "#f0f",
         width: "100%",
-        height: 220,
+        height: 245,
         marginBottom: 10
     },
     Labels: {

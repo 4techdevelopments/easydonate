@@ -11,19 +11,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Login() {
-  // [CARREGAR FONTS]
-  const [fontsLoaded] = useFonts({
-    "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
-    "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
-    "Montserrat-Italic": require("../../assets/fonts/Montserrat-Italic.ttf"),
-    "Montserrat-BoldItalic": require("../../assets/fonts/Montserrat-BoldItalic.ttf")
-  });
-
-  // [LOGIN]
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const router = useRouter();
 
+  // [LOGIN]
   const handleLogin = async () => {
     try {
       const response = await api.post('/Login', { email, senha });
@@ -37,10 +29,25 @@ export default function Login() {
       router.replace('/home');
     } catch (error: any) {
       console.log(error);
-      const msg = error.response?.data || "Erro ao efetuar login!";
+
+      let msg = "Erro ao efetuar login!";
+      if (typeof error.response?.data === 'string') {
+        msg = error.response.data;
+      } else if (error.response?.data?.message) {
+        msg = error.response.data.message;
+      }
+
       Alert.alert("Erro", msg);
     }
   };
+
+  // [CARREGAR FONTS]
+  const [fontsLoaded] = useFonts({
+    "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
+    "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
+    "Montserrat-Italic": require("../../assets/fonts/Montserrat-Italic.ttf"),
+    "Montserrat-BoldItalic": require("../../assets/fonts/Montserrat-BoldItalic.ttf")
+  });
 
   // [SENHA VISIVEL]
   const [senhaVisivel, setSenhaVisivel] = useState(false);

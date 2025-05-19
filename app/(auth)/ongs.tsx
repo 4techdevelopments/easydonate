@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
         height: "9%",
         position: "absolute",
         left: 0,
-        top: 0,
+        top: 20,
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-end",
