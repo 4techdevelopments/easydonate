@@ -50,5 +50,5 @@ Projeto EasyDonate
 
 9. Atualizando a Main antes de dar Commit na sua branch
    ```bash
-   git pull main
+   git pull
    ```
