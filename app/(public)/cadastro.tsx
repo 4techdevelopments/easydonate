@@ -11,10 +11,27 @@ import Colors from "../../components/Colors";
 
 export default function Cadastro() {
     const router = useRouter();
+    // [DOADOR]
+    const [emailDoador, setEmailDoador] = useState('');
+    const [senhaDoador, setSenhaDoador] = useState('');
+    const [senhaDoador2, setSenhaDoador2] = useState('');
+    const [tipoPessoa, setTipoPessoa] = useState('');
+    const [nomeDoador, setNomeDoador] = useState('');
+    const [nomeSocial, setNomeSocial] = useState('');
+    const [cpf, setCpf] = useState('');
+    const [cepDoador, setCepDoador] = useState('');
+    const [ruaDoador, setRuaDoador] = useState('');
+    const [numeroDoador, setNumeroDoador] = useState('');
+    const [complementoDoador, setComplementoDoador] = useState('');
+    const [bairroDoador, setBairroDoador] = useState('');
+    const [cidadeDoador, setCidadeDoador] = useState('');
+    const [estadoDoador, setEstadoDoador] = useState('');
+    const [dddDoador, setDddDoador] = useState('');
+    const [numeroTelDoador, setNumeroTelDoador] = useState('');
+    // [ONG]
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [senha2, setSenha2] = useState('');
-    const [tipoUsuario, setTipoUsuario] = useState<string>('');
     const [nome, setNome] = useState('');
     const [cnpj, setCnpj] = useState('');
     const [tipoAtividade, setTipoAtividade] = useState('');
@@ -30,12 +47,37 @@ export default function Cadastro() {
     const [numeroTel, setNumeroTel] = useState('');
     const [responsavelCadastro, setResponsavelCadastro] = useState('');
     const [comprovanteRegistro, setComprovanteRegistro] = useState('');
-    const [selectedOption, setSelectedOption] = useState<string>('Doador(a)');
+    // [ONG / DOADOR]
+    const [tipoUsuario, setTipoUsuario] = useState<string>('');
+    // [OPCAO SELECIONADA]
+    const [selectedOption, setSelectedOption] = useState<string>('');
+
+    // [TIPO USUARIO]
+    useEffect(() => {
+        if (selectedOption === 'ONG') {
+            setTipoUsuario('Ong');
+        } else if (selectedOption === 'Doador') {
+            setTipoUsuario('Doador');
+        } else {
+            setTipoUsuario('');
+        }
+    }, [selectedOption]);
+
+    // [CADASTRO]
+    function handleCadastro() {
+        if (selectedOption === 'ONG') {
+            cadastroOng();
+        } else if (selectedOption === 'Doador') {
+            cadastroDoador();
+        } else {
+            Alert.alert("Erro", "Selecione um tipo de doador!");
+        }
+    };
 
     // [BUSCAR CEP]
     useEffect(() => {
         const buscarCep = async () => {
-            if (cep.length === 8) {
+            if (cep.length === 8 && selectedOption === 'ONG') {
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                     const data = await response.json();
@@ -50,6 +92,29 @@ export default function Cadastro() {
                     setBairro(data.bairro || '');
                     setCidade(data.localidade || '');
                     setEstado(data.uf || '');
+
+                } catch (error) {
+                    Alert.alert("Erro", "Não foi possível buscar o CEP.");
+                    console.error("Erro ao buscar CEP:", error);
+                }
+            }
+
+            if (cepDoador.length === 8 && selectedOption === 'Doador') {
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cepDoador}/json/`);
+                    const data = await response.json();
+
+                    if (data.erro) {
+                        Alert.alert("Erro", "CEP não encontrado.");
+                        return;
+                    }
+
+                    setRuaDoador(data.logradouro || '');
+                    setComplementoDoador(data.complemento || '');
+                    setBairroDoador(data.bairro || '');
+                    setCidadeDoador(data.localidade || '');
+                    setEstadoDoador(data.uf || '');
+
                 } catch (error) {
                     Alert.alert("Erro", "Não foi possível buscar o CEP.");
                     console.error("Erro ao buscar CEP:", error);
@@ -58,9 +123,29 @@ export default function Cadastro() {
         };
 
         buscarCep();
-    }, [cep]);
+    }, [cep, cepDoador]);
 
-    const resetCampos = () => {
+    const resetCamposDoador = () => {
+        setEmailDoador('');
+        setSenhaDoador('');
+        setSenhaDoador2('');
+        setTipoUsuario('');
+        setTipoPessoa('');
+        setNomeDoador('');
+        setNomeSocial('');
+        setCpf('');
+        setCepDoador('');
+        setRuaDoador('');
+        setNumeroDoador('');
+        setComplementoDoador('');
+        setBairroDoador('');
+        setCidadeDoador('');
+        setEstadoDoador('');
+        setDddDoador('');
+        setNumeroTelDoador('');
+    };
+
+    const resetCamposOng = () => {
         setEmail('');
         setSenha('');
         setSenha2('');
@@ -82,27 +167,31 @@ export default function Cadastro() {
         setComprovanteRegistro('');
     };
 
-    useEffect(() => {
-        if (selectedOption === 'Ong') {
-            setTipoUsuario('Ong');
-        } else {
-            setTipoUsuario('Doador');
-        }
-    }, [selectedOption]);
-
-    // [CADASTRO]
-    const handleCadastro = async () => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const telefoneRegex = /^\d{8}$/;
-        const telefoneCelularRegex = /^\d{9}$/;
-        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-
-        if (email == null || tipoUsuario == null || nome == null || cnpj == null || tipoAtividade == null || cep == null || rua == null || numero == null || bairro == null || cidade == null || estado == null || ddd == null || numeroTel == null || responsavelCadastro == null || comprovanteRegistro == null || senha == null || senha2 == null) {
+    // [CADASTRO ONG]
+    const cadastroOng = async () => {
+        if (!email || !tipoUsuario || !nome || !cnpj || !tipoAtividade || !cep || !rua || !bairro || !cidade || !estado || !ddd || !numeroTel || !responsavelCadastro || !comprovanteRegistro || !senha || !senha2) {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
             return;
         }
 
-        let bodyRequest: any = {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert("Erro", "Digite um e-mail válido!");
+            return;
+        }
+
+        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!senhaRegex.test(senha)) {
+            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            return;
+        }
+
+        if (senha != senha2) {
+            Alert.alert("Erro", "As senhas não coincidem!");
+            return;
+        }
+
+        let bodyRequestOng: any = {
             email,
             senha,
             tipoUsuario,
@@ -122,39 +211,25 @@ export default function Cadastro() {
             comprovanteRegistro,
         };
 
+        const telefoneRegex = /^\d{8}$/;
+        const telefoneCelularRegex = /^\d{9}$/;
         if (numeroTel.length <= 9 && numeroTel.length >= 8) {
             if (telefoneCelularRegex.test(numeroTel)) {
-                bodyRequest.telefoneCelular = numeroTel;
+                bodyRequestOng.telefoneCelular = numeroTel;
             } else if (telefoneRegex.test(numeroTel)) {
-                bodyRequest.telefone = numeroTel;
+                bodyRequestOng.telefone = numeroTel;
             }
         } else {
             Alert.alert("Erro", "Informe um número de telefone/celular válido!");
             return;
         }
 
-
-        if (!emailRegex.test(email)) {
-            Alert.alert("Erro", "Digite um e-mail válido!");
-            return;
-        }
-
-        if (!senhaRegex.test(senha)) {
-            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
-            return;
-        }
-
-        if (senha != senha2) {
-            Alert.alert("Erro", "As senhas não coincidem!");
-            return;
-        }
-
         try {
-            const response = await api.post('/Ong', bodyRequest);
+            const response = await api.post('/Ong', bodyRequestOng);
 
             if (response.status === 201) {
-                Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-                resetCampos();
+                Alert.alert("Sucesso", "Ong cadastrada com sucesso!");
+                resetCamposOng();
                 router.replace('/inicio');
             }
 
@@ -170,7 +245,90 @@ export default function Cadastro() {
 
             Alert.alert("Erro", msg);
         }
-    };
+    }
+
+    // [CADASTRO DOADOR]
+    const cadastroDoador = async () => {
+        if (!emailDoador || !tipoUsuario || !nomeDoador || !tipoPessoa || !cpf || !cepDoador || !ruaDoador || !bairroDoador || !cidadeDoador || !estadoDoador || !dddDoador || !numeroTelDoador || !senhaDoador || !senhaDoador2) {
+            Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailDoador)) {
+            Alert.alert("Erro", "Digite um e-mail válido!");
+            return;
+        }
+
+        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!senhaRegex.test(senhaDoador)) {
+            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            return;
+        }
+
+        if (senhaDoador != senhaDoador2) {
+            Alert.alert("Erro", "As senhas não coincidem!");
+            return;
+        }
+
+        if (tipoPessoa !== "PF" && tipoPessoa !== "PJ") {
+            Alert.alert("Erro", "Tipo de Pessoa Inválido!");
+            return;
+        }
+
+        let bodyRequestDoador: any = {
+            email: emailDoador.trim(),
+            senha: senhaDoador,
+            tipoUsuario,
+            tipoPessoa,
+            nome: nomeDoador,
+            nomeSocial,
+            cpf,
+            cep: cepDoador,
+            rua: ruaDoador,
+            numero: numeroDoador.trim(),
+            complemento: complementoDoador,
+            bairro: bairroDoador,
+            cidade: cidadeDoador,
+            estado: estadoDoador,
+            ddd: dddDoador,
+        };
+
+        const telefoneRegex = /^\d{8}$/;
+        const telefoneCelularRegex = /^\d{9}$/;
+        if (numeroTelDoador.length <= 9 && numeroTelDoador.length >= 8) {
+            if (telefoneCelularRegex.test(numeroTelDoador)) {
+                bodyRequestDoador.telefoneCelular = numeroTelDoador;
+            } else if (telefoneRegex.test(numeroTelDoador)) {
+                bodyRequestDoador.telefone = numeroTelDoador;
+            }
+        } else {
+            Alert.alert("Erro", "Informe um número de telefone/celular válido!");
+            return;
+        }
+
+        try {
+            const response = await api.post('/Doador', bodyRequestDoador);
+
+            if (response.status === 201) {
+                Alert.alert("Sucesso", "Doador cadastrado com sucesso!");
+                resetCamposDoador();
+                router.replace('/inicio');
+            }
+
+        } catch (error: any) {
+            console.log("Erro", error);
+
+            let msg = "Erro ao realizar cadastro!";
+            if (typeof error.response?.data === 'string') {
+                msg = error.response.data;
+            } else if (error.response?.data?.message) {
+                msg = error.response.data.message;
+            }
+
+            Alert.alert("Erro", msg);
+        }
+    }
 
     // [CARREGAR FONTS]
     const [fontsLoaded] = useFonts({
@@ -189,7 +347,6 @@ export default function Cadastro() {
             return novas;
         });
     };
-
 
     // [LOADING ENQUANTO NÃO CARREGA AS FONTES]
     if (!fontsLoaded) {
@@ -223,18 +380,25 @@ export default function Cadastro() {
                             <Text style={styles.P}>Escolha uma opção:</Text>
 
                             <RadioSelector
-                                options={['Doador(a)', 'ONG']}
+                                options={['Doador', 'ONG']}
                                 selectedOption={selectedOption}
                                 onSelect={setSelectedOption}
                             />
 
                             <View style={styles.DivCadastroAll}>
-                                {selectedOption === "Doador(a)" && (
+                                {selectedOption === "Doador" && (
                                     <ScrollView horizontal={false} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
 
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Tipo Doador*</Text>
-
+                                            <TextInput
+                                                placeholder="Tipo Pessoa"
+                                                maxLength={2}
+                                                value={tipoPessoa}
+                                                onChangeText={setTipoPessoa}
+                                                keyboardType="default"
+                                                style={styles.Input}
+                                            />
                                         </View>
 
                                         <View style={styles.DivCadastro}>
@@ -242,6 +406,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Nome completo"
                                                 maxLength={255}
+                                                value={nomeDoador}
+                                                onChangeText={setNomeDoador}
                                                 keyboardType="default"
                                                 textContentType="name"
                                                 style={styles.Input}
@@ -252,6 +418,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Nome social"
                                                 maxLength={255}
+                                                value={nomeSocial}
+                                                onChangeText={setNomeSocial}
                                                 keyboardType="default"
                                                 textContentType="name"
                                                 style={styles.Input}
@@ -262,6 +430,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="000.000.000-00"
                                                 maxLength={11}
+                                                value={cpf}
+                                                onChangeText={setCpf}
                                                 keyboardType="number-pad"
                                                 style={styles.Input}
                                             />
@@ -271,17 +441,21 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="00000-000"
                                                 maxLength={8}
+                                                value={cepDoador}
+                                                onChangeText={setCepDoador}
                                                 keyboardType="number-pad"
                                                 textContentType="name"
                                                 style={styles.Input}
                                             />
                                         </View>
                                         <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Endereço*</Text>
+                                            <Text style={styles.Labels}>Endereço* / Numero</Text>
                                             <View style={styles.WrapperDoisInputs}>
                                                 <TextInput
                                                     placeholder="Endereço"
                                                     maxLength={255}
+                                                    value={ruaDoador}
+                                                    onChangeText={setRuaDoador}
                                                     keyboardType="default"
                                                     textContentType="streetAddressLine1"
                                                     style={styles.InputMedio}
@@ -289,6 +463,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="Nº"
                                                     maxLength={10}
+                                                    value={numeroDoador}
+                                                    onChangeText={setNumeroDoador}
                                                     keyboardType="number-pad"
                                                     style={styles.InputMini}
                                                 />
@@ -299,6 +475,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Complemento"
                                                 maxLength={255}
+                                                value={complementoDoador}
+                                                onChangeText={setComplementoDoador}
                                                 keyboardType="default"
                                                 textContentType="streetAddressLine2"
                                                 style={styles.Input}
@@ -309,6 +487,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Bairro"
                                                 maxLength={255}
+                                                value={bairroDoador}
+                                                onChangeText={setBairroDoador}
                                                 keyboardType="default"
                                                 style={styles.Input}
                                             />
@@ -319,6 +499,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="Cidade"
                                                     maxLength={255}
+                                                    value={cidadeDoador}
+                                                    onChangeText={setCidadeDoador}
                                                     keyboardType="default"
                                                     textContentType="addressCity"
                                                     style={styles.InputMedio}
@@ -326,6 +508,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="UF"
                                                     maxLength={2}
+                                                    value={estadoDoador}
+                                                    onChangeText={setEstadoDoador}
                                                     keyboardType="default"
                                                     textContentType="addressState"
                                                     style={styles.InputMini}
@@ -338,6 +522,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="DDD"
                                                     maxLength={2}
+                                                    value={dddDoador}
+                                                    onChangeText={setDddDoador}
                                                     keyboardType="number-pad"
                                                     textContentType="telephoneNumber"
                                                     style={styles.InputDdd}
@@ -345,6 +531,8 @@ export default function Cadastro() {
                                                 <TextInput
                                                     placeholder="000000000"
                                                     maxLength={9}
+                                                    value={numeroTelDoador}
+                                                    onChangeText={setNumeroTelDoador}
                                                     keyboardType="number-pad"
                                                     textContentType="telephoneNumber"
                                                     style={styles.InputTel}
@@ -356,6 +544,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Email"
                                                 maxLength={255}
+                                                value={emailDoador}
+                                                onChangeText={setEmailDoador}
                                                 keyboardType="email-address"
                                                 textContentType="emailAddress"
                                                 autoComplete="email"
@@ -367,6 +557,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Digite sua senha"
                                                 maxLength={128}
+                                                value={senhaDoador}
+                                                onChangeText={setSenhaDoador}
                                                 keyboardType="default"
                                                 textContentType="password"
                                                 secureTextEntry={!senhasVisiveis[0]}
@@ -384,6 +576,8 @@ export default function Cadastro() {
                                             <TextInput
                                                 placeholder="Repita sua senha"
                                                 maxLength={128}
+                                                value={senhaDoador2}
+                                                onChangeText={setSenhaDoador2}
                                                 keyboardType="default"
                                                 textContentType="password"
                                                 secureTextEntry={!senhasVisiveis[1]}
