@@ -45,10 +45,10 @@ Projeto EasyDonate
 
 8. Trocando de branch (VS Code)
    ```bash
-   git checkou "nome da branch"
+   git checkout "nome da branch"
    ```
 
 9. Atualizando a Main antes de dar Commit na sua branch
    ```bash
-   git pull main
+   git pull
    ```
