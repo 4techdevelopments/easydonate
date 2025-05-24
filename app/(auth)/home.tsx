@@ -9,12 +9,17 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Home() {
-  const { usuario } = useAuth();
+  const { usuario, logout } = useAuth();
+
+  // [DESLOGAR]
+    const handleLogout = () => {
+        logout();
+    };
 
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -46,9 +51,9 @@ export default function Home() {
                   <Text style={styles.Text}>!</Text>
                 </View>
                 <View style={styles.DivPerfil}>
-                  <View style={styles.Img}>
+                  <Pressable style={styles.Img} onPress={handleLogout}>
                     <FontAwesome6 name="user-large" size={15} color={Colors.ORANGE} />
-                  </View>
+                  </Pressable>
                 </View>
               </View>
             </View>

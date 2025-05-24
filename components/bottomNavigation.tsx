@@ -1,5 +1,4 @@
 /* eslint-disable import/no-named-as-default */
-import { useAuth } from '@/routes/AuthContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { usePathname, useRouter } from "expo-router";
@@ -8,14 +7,8 @@ import Colors from "./Colors";
 import Mao from "./mao";
 
 function BottomNavigation() {
-
-    const { logout } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-
-    const handleLogout = () => {
-        logout();
-    };
 
     return (
         <View style={styles.Nav}>
@@ -43,9 +36,9 @@ function BottomNavigation() {
                     <Text style={pathname === '/ongs' ? styles.TextBtnsActive : styles.TextBtns}>ONGs</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.Buttons} onPress={handleLogout}>
-                    <FontAwesome name="gear" style={styles.Icon} />
-                    <Text style={styles.TextBtns}>Configurações</Text>
+                <TouchableOpacity style={styles.Buttons}>
+                    <FontAwesome name="gear" style={pathname === '/configuracoes' ? styles.IconActive : styles.Icon} />
+                    <Text style={pathname === '/configuracoes' ? styles.TextBtnsActive : styles.TextBtns}>Configurações</Text>
                 </TouchableOpacity>
             </View>
         </View>
