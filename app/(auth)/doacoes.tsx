@@ -41,6 +41,9 @@ const MOCK_DOACOES: Doacao[] = [
 
 function CardDoacao({ doacao }: { doacao: Doacao }) {
     return (
+
+
+
         <View style={styles.CardContainer}>
             <View style={styles.CardStatus}>
                 <Text style={styles.CardStatusText}>{doacao.status}</Text>
@@ -70,6 +73,7 @@ function CardDoacao({ doacao }: { doacao: Doacao }) {
                 </View>
             </View>
         </View>
+
     );
 }
 
@@ -115,7 +119,7 @@ export default function Doacoes() {
                         <View style={styles.Header}>
                             <View style={styles.WrapperTitulo}>
                                 <View style={styles.DivOla}>
-                                    
+
                                 </View>
                                 <View style={styles.DivPerfil}>
                                     <View style={styles.Img}>
