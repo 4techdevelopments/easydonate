@@ -161,7 +161,7 @@ export default function OngDetalhes() {
                                     <Text style={styles.label}>Descrição da ONG</Text>
                                     <TextInput
                                         style={styles.TextArea}
-                                        value={ong.descricaoMissao || 'Nada Informado'}
+                                        value={ong.descricaoMissao || ""}
                                         maxLength={1000}
                                         onChangeText={(text) => setOng({ ...ong, descricaoMissao: text })}
                                         multiline
