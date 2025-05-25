@@ -12,15 +12,13 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Home() {
-  const router = useRouter();
-  const { usuario, logout } = useAuth();
+  const { usuario } = useAuth();
 
   // [INPUT PESQUISA]
   const [searchText, setSearchText] = useState<string>('');
@@ -60,11 +58,6 @@ export default function Home() {
     ong.nome.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // [DESLOGAR]
-  const handleLogout = () => {
-    logout();
-  };
-
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
     "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
@@ -95,7 +88,7 @@ export default function Home() {
                   <Text style={styles.Text}>!</Text>
                 </View>
                 <View style={styles.DivPerfil}>
-                  <Pressable style={styles.Img} onPress={handleLogout}>
+                  <Pressable style={styles.Img}>
                     <FontAwesome6 name="user-large" size={15} color={Colors.ORANGE} />
                   </Pressable>
                 </View>
