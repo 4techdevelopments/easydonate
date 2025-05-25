@@ -164,13 +164,15 @@ export default function Login() {
           </View>
         </View>
       </View>
+
+      {/* // [MODAL] */}
       <Modal isVisible={isModalVisible}>
-        <View style={{ backgroundColor: "white", padding: 15, borderRadius: 15, alignItems: 'center' }}>
+        <View style={styles.modalStyle}>
           <Image
-                                          source={require("../../assets/images/logo-easy-donate-black.webp")}
-                                          style={styles.ImgEasyDonate}
-                                          resizeMode="contain"
-                                      />
+            source={require("../../assets/images/logo-easy-donate-black.webp")}
+            style={styles.ImgEasyDonate}
+            resizeMode="contain"
+          />
           <Text style={{ fontSize: 16, fontWeight: "bold", color: modalSucesso ? Colors.ORANGE : Colors.ORANGE, marginBottom: 10 }}>
             {modalSucesso ? "Sucesso, seja bem-vindo(a)!" : "Erro ao efetuar login."}
           </Text>
@@ -214,10 +216,10 @@ const styles = StyleSheet.create({
     zIndex: -1
   },
   ImgEasyDonate: {
-        width: 120,
-        height: 40,
-        marginBottom: 10,
-    },
+    width: 120,
+    height: 40,
+    marginBottom: 10,
+  },
   Wrapper: {
     width: "80%",
     height: "100%"
@@ -245,19 +247,30 @@ const styles = StyleSheet.create({
     color: Colors.WHITE,
     fontSize: 18
   },
+  modalStyle: {
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 15,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: "#12121275",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
   btnFechar: {
-          backgroundColor: Colors.ORANGE,
-          padding: 10,
-          borderRadius: 35,
-          width: 140,
-          // borderColor: Colors.BLACK,
-          // borderWidth: 1,
-          alignItems: "center",
-      },
-      btnFecharlText: {
-          color: Colors.WHITE,
-          // fontWeight: "bold",
-      },
+    backgroundColor: Colors.ORANGE,
+    padding: 10,
+    borderRadius: 35,
+    width: 140,
+    // borderColor: Colors.BLACK,
+    // borderWidth: 1,
+    alignItems: "center",
+  },
+  btnFecharlText: {
+    color: Colors.WHITE,
+    // fontWeight: "bold",
+  },
   Section: {
     //backgroundColor: "#f00",
     width: "100%",

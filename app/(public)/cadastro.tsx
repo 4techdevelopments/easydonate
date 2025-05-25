@@ -5,12 +5,36 @@ import { Entypo } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Cadastro() {
     const router = useRouter();
+
+    // [MODAL]
+    const [modalErrorVisible, setModalErrorVisible] = useState(false);
+    const [modalSucessoVisible, setModalSucessoVisible] = useState(false);
+    const [modalMensagem, setModalMensagem] = useState('');
+    const [modalSucesso, setModalSucesso] = useState(false);
+
+    const mostrarModalErro = (mensagem: string) => {
+        setModalMensagem(mensagem);
+        setModalErrorVisible(true);
+    };
+    const mostrarModalSucesso = (mensagem: string, sucesso: boolean = false) => {
+        setModalMensagem(mensagem);
+        setModalSucesso(sucesso);
+        setModalSucessoVisible(true);
+
+        setTimeout(() => {
+            setModalSucessoVisible(false);
+            router.replace('/login');
+        }, 2500); // espera 2,5 segundos
+    };
+
+
     // [DOADOR]
     const [emailDoador, setEmailDoador] = useState('');
     const [senhaDoador, setSenhaDoador] = useState('');
@@ -63,6 +87,7 @@ export default function Cadastro() {
         }
     }, [selectedOption]);
 
+
     // [CADASTRO]
     function handleCadastro() {
         if (selectedOption === 'ONG') {
@@ -70,7 +95,7 @@ export default function Cadastro() {
         } else if (selectedOption === 'Doador') {
             cadastroDoador();
         } else {
-            Alert.alert("Erro", "Selecione um tipo de doador!");
+            mostrarModalErro("Selecione pelo menos um tipo de doador!");
         }
     };
 
@@ -83,7 +108,7 @@ export default function Cadastro() {
                     const data = await response.json();
 
                     if (data.erro) {
-                        Alert.alert("Erro", "CEP não encontrado.");
+                        mostrarModalErro("CEP não encontrado.");
                         return;
                     }
 
@@ -94,7 +119,7 @@ export default function Cadastro() {
                     setEstado(data.uf || '');
 
                 } catch (error) {
-                    Alert.alert("Erro", "Não foi possível buscar o CEP.");
+                    mostrarModalErro("Não foi possível buscar o CEP.");
                     console.error("Erro ao buscar CEP:", error);
                 }
             }
@@ -105,7 +130,7 @@ export default function Cadastro() {
                     const data = await response.json();
 
                     if (data.erro) {
-                        Alert.alert("Erro", "CEP não encontrado.");
+                        mostrarModalErro("CEP não encontrado.");
                         return;
                     }
 
@@ -116,14 +141,14 @@ export default function Cadastro() {
                     setEstadoDoador(data.uf || '');
 
                 } catch (error) {
-                    Alert.alert("Erro", "Não foi possível buscar o CEP.");
+                    mostrarModalErro("Não foi possível buscar o CEP.");
                     console.error("Erro ao buscar CEP:", error);
                 }
             }
         };
 
         buscarCep();
-    }, [cep, cepDoador]);
+    }, [cep, cepDoador, selectedOption]);
 
     const resetCamposDoador = () => {
         setEmailDoador('');
@@ -170,24 +195,28 @@ export default function Cadastro() {
     // [CADASTRO ONG]
     const cadastroOng = async () => {
         if (!email || !tipoUsuario || !nome || !cnpj || !tipoAtividade || !cep || !rua || !bairro || !cidade || !estado || !ddd || !numeroTel || !responsavelCadastro || !comprovanteRegistro || !senha || !senha2) {
-            Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
+            // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");  
+            mostrarModalErro("Preencha todos os campos obrigatórios!");
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            Alert.alert("Erro", "Digite um e-mail válido!");
+            mostrarModalErro("Digite um e-mail válido!");
+            // Alert.alert("Erro", "Digite um e-mail válido!");
             return;
         }
 
         const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
         if (!senhaRegex.test(senha)) {
-            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            mostrarModalErro("A senha deve conter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            // Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
             return;
         }
 
         if (senha !== senha2) {
-            Alert.alert("Erro", "As senhas não coincidem!");
+            mostrarModalErro("As senhas não coincidem!");
+            // Alert.alert("Erro", "As senhas não coincidem!");
             return;
         }
 
@@ -220,7 +249,8 @@ export default function Cadastro() {
                 bodyRequestOng.telefone = numeroTel;
             }
         } else {
-            Alert.alert("Erro", "Informe um número de telefone/celular válido!");
+            mostrarModalErro("Informe um número de telefone/celular válido!");
+            // Alert.alert("Erro", "Informe um número de telefone/celular válido!");
             return;
         }
 
@@ -228,51 +258,64 @@ export default function Cadastro() {
             const response = await api.post('/Ong', bodyRequestOng);
 
             if (response.status === 201) {
-                Alert.alert("Sucesso", "Ong cadastrada com sucesso!");
-                resetCamposOng();
-                router.replace('/inicio');
+                mostrarModalSucesso("ONG cadastrada com sucesso!");
+                setTimeout(() => {
+                    resetCamposOng();
+                    setModalSucessoVisible(false); // fecha o modal se quiser
+                    router.replace('/login');
+                }, 2500);
             }
 
         } catch (error: any) {
-            console.log("Erro", error);
+            console.log("Erro ao cadastrar:", error);
 
             let msg = "Erro ao realizar cadastro!";
-            if (typeof error.response?.data === 'string') {
-                msg = error.response.data;
-            } else if (error.response?.data?.message) {
-                msg = error.response.data.message;
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
             }
 
-            Alert.alert("Erro", msg);
+            mostrarModalErro(msg);
         }
     }
 
     // [CADASTRO DOADOR]
     const cadastroDoador = async () => {
         if (!emailDoador || !tipoUsuario || !nomeDoador || !tipoPessoa || !cpf || !cepDoador || !ruaDoador || !bairroDoador || !cidadeDoador || !estadoDoador || !dddDoador || !numeroTelDoador || !senhaDoador || !senhaDoador2) {
-            Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
+            // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
+            mostrarModalErro("Preencha todos os campos obrigatórios!");
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(emailDoador)) {
-            Alert.alert("Erro", "Digite um e-mail válido!");
+            mostrarModalErro("Digite um e-mail válido!");
+            // Alert.alert("Erro", "Digite um e-mail válido!");
             return;
         }
 
         const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
         if (!senhaRegex.test(senhaDoador)) {
-            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            mostrarModalErro("A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            // Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
             return;
         }
 
         if (senhaDoador !== senhaDoador2) {
-            Alert.alert("Erro", "As senhas não coincidem!");
+            mostrarModalErro("As senhas não coincidem!");
+            // Alert.alert("Erro", "As senhas não coincidem!");
             return;
         }
 
-        if (tipoPessoa !== "PF" && tipoPessoa !== "PJ") {
-            Alert.alert("Erro", "Tipo de Pessoa Inválido!");
+        if (tipoPessoa !== "PF" && tipoPessoa !== "PJ" && tipoPessoa !== "pf" && tipoPessoa !== "pj") {
+            mostrarModalErro("Tipo de Pessoa inválido! Informe PF ou PJ.");
+            // Alert.alert("Erro", "Tipo de Pessoa Inválido!");
             return;
         }
 
@@ -303,7 +346,8 @@ export default function Cadastro() {
                 bodyRequestDoador.telefone = numeroTelDoador;
             }
         } else {
-            Alert.alert("Erro", "Informe um número de telefone/celular válido!");
+            // Alert.alert("Erro", "Informe um número de telefone/celular válido!");
+            mostrarModalErro("Informe um número de telefone/celular válido!");
             return;
         }
 
@@ -311,23 +355,32 @@ export default function Cadastro() {
             const response = await api.post('/Doador', bodyRequestDoador);
 
             if (response.status === 201) {
-                Alert.alert("Sucesso", "Doador cadastrado com sucesso!");
-                resetCamposDoador();
-                router.replace('/inicio');
+                mostrarModalSucesso("Doador cadastrado com sucesso!", true);
+                setTimeout(() => {
+                    resetCamposDoador();
+                    setModalSucessoVisible(false); // fecha o modal se quiser
+                    router.replace('/login');
+                }, 2500); // espera 2,5 segundos
             }
 
         } catch (error: any) {
-            console.log("Erro", error);
+            console.log("Erro ao cadastrar:", error);
 
             let msg = "Erro ao realizar cadastro!";
-            if (typeof error.response?.data === 'string') {
-                msg = error.response.data;
-            } else if (error.response?.data?.message) {
-                msg = error.response.data.message;
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
             }
 
-            Alert.alert("Erro", msg);
+            mostrarModalErro(msg);
         }
+
     }
 
     // [CARREGAR FONTS]
@@ -392,7 +445,7 @@ export default function Cadastro() {
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Tipo Doador*</Text>
                                             <TextInput
-                                                placeholder="Tipo Pessoa"
+                                                placeholder="Tipo Pessoa: PF ou PJ"
                                                 maxLength={2}
                                                 value={tipoPessoa}
                                                 onChangeText={setTipoPessoa}
@@ -593,7 +646,7 @@ export default function Cadastro() {
                                     </ScrollView>
                                 )}
 
-                                {selectedOption == "ONG" && (
+                                {selectedOption === "ONG" && (
                                     <ScrollView horizontal={false} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
 
                                         <View style={styles.DivCadastro}>
@@ -836,9 +889,68 @@ export default function Cadastro() {
                                 <Text style={styles.Label2}>Faça seu login!</Text>
                             </TouchableOpacity>
                         </View>
+
+
                     </View>
                 </View>
             </View>
+
+            <Modal
+                isVisible={modalErrorVisible}
+                animationIn="fadeIn"
+                animationOut="fadeOut"
+                backdropTransitionOutTiming={0}
+                onBackdropPress={() => setModalErrorVisible(false)}
+                onBackButtonPress={() => setModalErrorVisible(false)}
+            >
+                <View style={styles.modalStyle}>
+                    <Image
+                        source={require("../../assets/images/mao-broken-black.webp")}
+                        style={styles.ImgEasyDonate}
+                        resizeMode="contain"
+                    />
+                    <Text style={{ fontSize: 16, fontWeight: "bold", color: Colors.ORANGE, marginBottom: 10 }}>
+                        Erro ao cadastrar
+                    </Text>
+                    <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, color: Colors.BLACK }}>
+                        {modalMensagem}
+                    </Text>
+                    {!modalSucesso && (
+                        <TouchableOpacity
+                            onPress={() => setModalErrorVisible(false)}
+                            style={styles.btnFechar}
+                        >
+                            <Text style={styles.btnFecharlText}>Fechar</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </Modal>
+
+            <Modal
+                isVisible={modalSucessoVisible}
+                animationIn="fadeIn"
+                animationOut="fadeOut"
+                backdropTransitionOutTiming={0}
+                onBackdropPress={() => setModalSucessoVisible(false)}
+                onBackButtonPress={() => setModalSucessoVisible(false)}
+            >
+                <View style={styles.modalStyle}>
+                    <Image
+                        source={require("../../assets/images/mao-black.webp")}
+                        style={styles.ImgEasyDonate}
+                        resizeMode="contain"
+                    />
+                    <Text style={{ fontSize: 16, fontWeight: "bold", color: Colors.ORANGE, marginBottom: 10 }}>
+                        Sucesso ao cadastrar
+                    </Text>
+                    <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, color: Colors.BLACK }}>
+                        {modalMensagem}
+                    </Text>
+                    
+                </View>
+            </Modal>
+
+
         </SafeAreaView>
     );
 }
@@ -850,6 +962,36 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#00000050"
+    },
+    modalStyle: {
+        backgroundColor: Colors.WHITE,
+        padding: 15,
+        borderRadius: 15,
+        alignItems: 'center',
+        // borderColor: Colors.ORANGE,
+        // borderWidth: 1,
+        elevation: 2,
+        shadowColor: "#12121275",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    btnFechar: {
+        backgroundColor: Colors.ORANGE,
+        padding: 10,
+        borderRadius: 35,
+        width: 140,
+        // borderColor: Colors.BLACK,
+        // borderWidth: 1,
+        alignItems: "center",
+    },
+    btnFecharlText: {
+        color: Colors.WHITE,
+        // fontWeight: "bold",
+    },
+    ImgEasyDonate: {
+        width: 150,
+        height: 80,
     },
     Bg: {
         position: "absolute",
