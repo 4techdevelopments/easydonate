@@ -107,6 +107,9 @@ export default function Configuracoes() {
                         <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 20 }}>
                             Você realmente quer sair?
                         </Text>
+                        <Text style={{ fontSize: 13, fontWeight: "light", marginBottom: 20 }}>
+                            Qualquer alteração não salva será perdida.
+                        </Text>
                         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                             <TouchableOpacity onPress={toggleModal} style={styles.btnCancel}>
                                 <Text style={styles.btnCancelText}>Cancelar</Text>
