@@ -36,8 +36,10 @@ function BottomNavigation() {
                     <Text style={pathname === '/ongs' ? styles.TextBtnsActive : styles.TextBtns}>ONGs</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.Buttons}>
-                    <FontAwesome name="gear" style={pathname === '/configuracoes' ? styles.IconActive : styles.Icon} />
+                <TouchableOpacity style={styles.Buttons} onPress={() => router.push('/(auth)/configuracoes')}>
+                    <FontAwesome 
+                        name="gear" 
+                        style={pathname === '/configuracoes' ? styles.IconActive : styles.Icon} />
                     <Text style={pathname === '/configuracoes' ? styles.TextBtnsActive : styles.TextBtns}>Configurações</Text>
                 </TouchableOpacity>
             </View>
