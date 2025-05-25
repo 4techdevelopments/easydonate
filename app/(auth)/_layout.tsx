@@ -22,7 +22,7 @@ export default function StackLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="conta"
+          name="ongDetalhes"
           options={{ headerShown: false }}
         />
       </Stack>

@@ -1,7 +1,10 @@
+import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import OngCard from "@/components/ongCard";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
+import { Ong } from "@/types/Ong";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,17 +12,58 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Home() {
+  const router = useRouter();
   const { usuario, logout } = useAuth();
 
+  // [INPUT PESQUISA]
+  const [searchText, setSearchText] = useState<string>('');
+
+  // [ONGS]
+  const [ongs, setOngs] = useState<Ong[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // [BUSCAR ONGS]
+  const fetchOngs = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get<Ong[]>("/Ong");
+
+      if (response.status === 200) {
+        setOngs(response.data);
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      let msg = "Erro ao buscar ONGs!";
+      if (typeof error.response?.data === "string") {
+        msg = error.response.data;
+      } else if (error.response?.data?.message) {
+        msg = error.response.data.message;
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOngs();
+  }, []);
+
+  const filteredOngs = ongs.filter(ong =>
+    ong.nome.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   // [DESLOGAR]
-    const handleLogout = () => {
-        logout();
-    };
+  const handleLogout = () => {
+    logout();
+  };
 
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -28,7 +72,7 @@ export default function Home() {
     "Montserrat-BoldItalic": require("../../assets/fonts/Montserrat-BoldItalic.ttf")
   });
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loading) {
     return (
       <View style={[styles.Container, { backgroundColor: Colors.BG }]}>
         <EasyDonateSvg />
@@ -70,13 +114,12 @@ export default function Home() {
                     <View style={styles.BtnSearch}>
                       <Octicons name="search" style={styles.IconSearch} />
                     </View>
-                    <TextInput placeholder="Buscar Organizações..." style={styles.InputSearch} />
-
-                    <TouchableOpacity style={styles.BtnFilter}>
-                      <View>
-                        <Octicons name="filter" style={styles.IconFilter} />
-                      </View>
-                    </TouchableOpacity>
+                    <TextInput
+                      value={searchText}
+                      onChangeText={setSearchText}
+                      placeholder="Buscar Organizações..."
+                      style={styles.InputSearch}
+                    />
                   </View>
                 </View>
 
@@ -117,49 +160,13 @@ export default function Home() {
                   <Text style={styles.Sugeridas}>sugeridas</Text>
                 </View>
 
-                <View style={styles.DivOng}>
-                  <View style={styles.WrapperInfoOng}>
-                    <View style={styles.WrapperHeart}>
-                      <Ionicons name="heart" size={30} color={Colors.ORANGE} />
-                    </View>
-
-                    <View style={styles.WrapperImgOng}>
-                      <Image source={require("../../assets/images/ongviver.png")} style={styles.OngImage} resizeMode="center" />
-                    </View>
-
-                    <View style={styles.WrapperOng}>
-                      <Text style={styles.NomeOng}>ONG Viver</Text>
-                      <Text style={styles.LocalOng}>Londrina-PR</Text>
-                    </View>
-
-                    <View style={styles.WrapperCategoria}>
-                      <Text style={styles.NomeCategoria}>Categoria: </Text>
-                      <Text style={styles.NomeCategoriaBold}>Geral</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.DivOng}>
-                  <View style={styles.WrapperInfoOng}>
-                    <View style={styles.WrapperHeart}>
-                      <Ionicons name="heart" size={30} color={Colors.ORANGE} />
-                    </View>
-
-                    <View style={styles.WrapperImgOng}>
-                      <Image source={require("../../assets/images/ongviver.png")} style={styles.OngImage} resizeMode="center" />
-                    </View>
-
-                    <View style={styles.WrapperOng}>
-                      <Text style={styles.NomeOng}>ONG Viver</Text>
-                      <Text style={styles.LocalOng}>Londrina-PR</Text>
-                    </View>
-
-                    <View style={styles.WrapperCategoria}>
-                      <Text style={styles.NomeCategoria}>Categoria: </Text>
-                      <Text style={styles.NomeCategoriaBold}>Geral</Text>
-                    </View>
-                  </View>
-                </View>
+                {filteredOngs.length === 0 ? (
+                  <Text style={{ fontFamily: "Montserrat" }}>Nenhuma ONG encontrada.</Text>
+                ) : (
+                  filteredOngs.map((ong) => (
+                    <OngCard key={ong.idOng} ong={ong} />
+                  ))
+                )}
 
               </View>
 
@@ -169,7 +176,6 @@ export default function Home() {
             </View>
 
           </View>
-
 
         </View>
       </SafeAreaView>
@@ -264,7 +270,7 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   WrapperInputSearch: {
-    width: "100%",
+    width: "88%",
     display: "flex",
     flexDirection: "row"
   },
@@ -282,7 +288,7 @@ const styles = StyleSheet.create({
     padding: 10
   },
   InputSearch: {
-    width: "70%",
+    width: "100%",
     backgroundColor: Colors.INPUT_GRAY,
     borderTopRightRadius: 5,
     borderBottomRightRadius: 5,
@@ -364,68 +370,6 @@ const styles = StyleSheet.create({
   Sugeridas: {
     fontFamily: "Montserrat",
     fontSize: 18
-  },
-  DivOng: {
-    width: "100%",
-    backgroundColor: Colors.INPUT_GRAY,
-    height: 300,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: Colors.GRAY,
-    marginBottom: 35
-  },
-  WrapperInfoOng: {
-    //backgroundColor: "#0000ff25",
-    padding: 25,
-    width: "100%",
-    height: "100%"
-  },
-  WrapperHeart: {
-    //backgroundColor: "#f00",
-    width: "100%"
-  },
-  WrapperOng: {
-    //backgroundColor: "#ff0",
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  NomeOng: {
-    fontFamily: "Montserrat-Bold",
-    fontSize: 18
-  },
-  LocalOng: {
-    fontFamily: "Montserrat",
-    fontSize: 14
-  },
-  WrapperImgOng: {
-    //backgroundColor: "#0f0",
-    width: "100%",
-    height: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingBottom: 10
-  },
-  OngImage: {
-    width: "90%",
-    height: "90%"
-  },
-  WrapperCategoria: {
-    //backgroundColor: "#0ff",
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-    paddingTop: 20
-  },
-  NomeCategoria: {
-    fontFamily: "Montserrat"
-  },
-  NomeCategoriaBold: {
-    fontFamily: "Montserrat-Bold"
   },
   Footer: {
     width: "100%",
