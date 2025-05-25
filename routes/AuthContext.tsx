@@ -15,6 +15,7 @@ type AuthContextType = {
     usuario: any | null;
     login: (token: string, usuario: any) => void;
     logout: () => void;
+    atualizarUsuario: (novosDados: any) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,6 +71,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.replace("/inicio");
     };
 
+    const atualizarUsuario = (novosDados: any) => {
+        setUsuario((prevUsuario: any) => ({
+            ...prevUsuario,
+            ...novosDados,
+        }));
+    }
+
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.BG }}>
@@ -79,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, usuario, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, usuario, login, logout, atualizarUsuario }}>
             {children}
         </AuthContext.Provider>
     );

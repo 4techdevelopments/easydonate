@@ -21,6 +21,10 @@ export default function StackLayout() {
           name="configuracoes"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="conta"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </AuthProvider>
   )
