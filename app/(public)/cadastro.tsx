@@ -186,7 +186,7 @@ export default function Cadastro() {
             return;
         }
 
-        if (senha != senha2) {
+        if (senha !== senha2) {
             Alert.alert("Erro", "As senhas não coincidem!");
             return;
         }
@@ -266,7 +266,7 @@ export default function Cadastro() {
             return;
         }
 
-        if (senhaDoador != senhaDoador2) {
+        if (senhaDoador !== senhaDoador2) {
             Alert.alert("Erro", "As senhas não coincidem!");
             return;
         }
