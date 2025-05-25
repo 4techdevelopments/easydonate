@@ -6,7 +6,8 @@ import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
@@ -14,6 +15,14 @@ export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalMensagem, setModalMensagem] = useState('');
+  const [modalSucesso, setModalSucesso] = useState(false);
+  const mostrarModal = (mensagem: string, sucesso: boolean = false) => {
+    setModalMensagem(mensagem);
+    setModalSucesso(sucesso);
+    setModalVisible(true);
+  };
 
   // [LOGIN]
   const handleLogin = async () => {
@@ -25,19 +34,23 @@ export default function Login() {
       await SecureStore.setItemAsync('token', token);
       await SecureStore.setItemAsync('usuario', JSON.stringify(usuario));
 
-      Alert.alert("Login realizado com sucesso!");
-      router.replace('/home');
+      mostrarModal("Login efetuado com sucesso!", true);
+      setTimeout(() => {
+        setModalVisible(false);
+        router.replace('/home');
+      }, 1500);
+
     } catch (error: any) {
       console.log(error);
 
-      let msg = "Erro ao efetuar login!";
+      let msg = "Erro ao efetuar login.";
       if (typeof error.response?.data === 'string') {
         msg = error.response.data;
       } else if (error.response?.data?.message) {
         msg = error.response.data.message;
       }
 
-      Alert.alert("Erro", msg);
+      mostrarModal(msg, false);
     }
   };
 
@@ -64,7 +77,12 @@ export default function Login() {
     )
   }
 
+
+
   return (
+
+
+
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.Container}>
 
@@ -146,8 +164,35 @@ export default function Login() {
           </View>
         </View>
       </View>
+      <Modal isVisible={isModalVisible}>
+        <View style={{ backgroundColor: "white", padding: 15, borderRadius: 15, alignItems: 'center' }}>
+          <Image
+                                          source={require("../../assets/images/logo-easy-donate-black.webp")}
+                                          style={styles.ImgEasyDonate}
+                                          resizeMode="contain"
+                                      />
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: modalSucesso ? Colors.ORANGE : Colors.ORANGE, marginBottom: 10 }}>
+            {modalSucesso ? "Sucesso, seja bem-vindo(a)!" : "Erro ao efetuar login."}
+          </Text>
+          <Text style={{ fontSize: 14, textAlign: 'center', marginBottom: 15 }}>
+            {modalMensagem}
+          </Text>
+          {!modalSucesso && (
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.btnFechar}>
+              <Text style={styles.btnFecharlText}>Fechar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </Modal>
+
+
     </SafeAreaView>
+
+
+
   );
+
+
 }
 
 const styles = StyleSheet.create({
@@ -168,6 +213,11 @@ const styles = StyleSheet.create({
     height: "100%",
     zIndex: -1
   },
+  ImgEasyDonate: {
+        width: 120,
+        height: 40,
+        marginBottom: 10,
+    },
   Wrapper: {
     width: "80%",
     height: "100%"
@@ -195,6 +245,19 @@ const styles = StyleSheet.create({
     color: Colors.WHITE,
     fontSize: 18
   },
+  btnFechar: {
+          backgroundColor: Colors.ORANGE,
+          padding: 10,
+          borderRadius: 35,
+          width: 140,
+          // borderColor: Colors.BLACK,
+          // borderWidth: 1,
+          alignItems: "center",
+      },
+      btnFecharlText: {
+          color: Colors.WHITE,
+          // fontWeight: "bold",
+      },
   Section: {
     //backgroundColor: "#f00",
     width: "100%",
