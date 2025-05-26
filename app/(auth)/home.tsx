@@ -55,7 +55,7 @@ export default function Home() {
   }, []);
 
   const filteredOngs = ongs.filter(ong =>
-    ong.nome.toLowerCase().includes(searchText.toLowerCase())
+    ong.nome?.toLowerCase().includes(searchText.toLowerCase())
   );
 
   const [fontsLoaded] = useFonts({
