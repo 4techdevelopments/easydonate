@@ -17,10 +17,22 @@ const REGIAO_INICIAL = {
     longitudeDelta: 0.07,
 };
 
-const ong_viver = {
-    latitude: -23.329989247504727,
-    longitude: -51.15615050407202,
-};
+const ongs = [
+    {
+        id: 1,
+        nome: "ONG Viver - Crianças e Adolescentes com Câncer",
+        latitude: -23.329989247504727,
+        longitude: -51.15615050407202,
+        endereco: "R. Bernardo Sayão, 319",
+    },
+    {
+        id: 2,
+        nome: "ONG Patrulha das Águas",
+        latitude: -23.334020901739546, 
+        longitude: -51.15835446501554,
+        endereco: "R. da Canoagem, 10",
+    }
+];
 
 export default function Ongs() {
     const [visibleModal, setVisibleModal] = useState(false);
@@ -41,10 +53,10 @@ export default function Ongs() {
         )
     }
 
-    const goToOngViver = () => {
+    const goToOng = (latitude: number, longitude: number) => {
         setMapRegion({
-            latitude: -23.329989247504727,
-            longitude: -51.15615050407202,
+            latitude,
+            longitude,
             latitudeDelta: 0.001,
             longitudeDelta: 0.001,
         });
@@ -61,7 +73,18 @@ export default function Ongs() {
                         showsUserLocation={true}
                         showsMyLocationButton={true}
                     >
-                        <Marker coordinate={ong_viver} pinColor="red" />
+                        {ongs.map((ong) =>(
+                            <Marker 
+                                key={ong.id}
+                                coordinate={{
+                                    latitude: ong.latitude,
+                                    longitude: ong.longitude
+                                }}
+                                title={ong.nome}
+                                description={ong.endereco}
+                                pinColor="red"
+                            />
+                        ))}
                     </MapView>
                 </View>
 
@@ -81,7 +104,7 @@ export default function Ongs() {
                 >
                     <ModalOngs
                         handleClose={() => setVisibleModal(false)} 
-                        goToOngViver={goToOngViver}
+                        goToOng={goToOng}
                     />
                 </Modal>
 
