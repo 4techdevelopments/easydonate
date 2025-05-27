@@ -3,9 +3,10 @@ import * as SecureStore from "expo-secure-store";
 
 // MARCOS IP: http://192.168.2.16:5062/api
 // GUILHERME IP: http://192.168.0.110:5062/api
+// FACUL IP: http://192.168.56.1:5062/api
 
 const api = axios.create({
-    baseURL: "http://192.168.2.16:5062/api", // Replace with your API URL
+    baseURL: "http://192.168.56.1:5062/api", // Replace with your API URL
     headers: {
         "Content-Type": "application/json"
     },
