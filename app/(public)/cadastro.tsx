@@ -200,7 +200,7 @@ export default function Cadastro() {
             return;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(email)) {
             mostrarModalErro("Digite um e-mail válido!");
             // Alert.alert("Erro", "Digite um e-mail válido!");
@@ -293,7 +293,18 @@ export default function Cadastro() {
             return;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (tipoPessoa !== "PF" && tipoPessoa !== "PJ" && tipoPessoa !== "pf" && tipoPessoa !== "pj") {
+            mostrarModalErro("Tipo de Pessoa inválido! Informe PF ou PJ.");
+            // Alert.alert("Erro", "Tipo de Pessoa Inválido!");
+            return;
+        }
+
+        const cpfRegex = /^\d{11}$/;
+        if (!cpfRegex.test(cpf)) {
+            mostrarModalErro("Cpf Inválido!");
+        }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(emailDoador)) {
             mostrarModalErro("Digite um e-mail válido!");
             // Alert.alert("Erro", "Digite um e-mail válido!");
@@ -310,12 +321,6 @@ export default function Cadastro() {
         if (senhaDoador !== senhaDoador2) {
             mostrarModalErro("As senhas não coincidem!");
             // Alert.alert("Erro", "As senhas não coincidem!");
-            return;
-        }
-
-        if (tipoPessoa !== "PF" && tipoPessoa !== "PJ" && tipoPessoa !== "pf" && tipoPessoa !== "pj") {
-            mostrarModalErro("Tipo de Pessoa inválido! Informe PF ou PJ.");
-            // Alert.alert("Erro", "Tipo de Pessoa Inválido!");
             return;
         }
 
