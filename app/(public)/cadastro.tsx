@@ -301,7 +301,9 @@ export default function Cadastro() {
 
         const cpfRegex = /^\d{11}$/;
         if (!cpfRegex.test(cpf)) {
-            mostrarModalErro("Cpf Inválido!");
+            mostrarModalErro("Digite o cpf corretamente!");
+            // Alert.alert("Erro", "Digite o cpf corretamente!");
+            return;
         }
 
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
