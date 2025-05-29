@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "./Colors";
 
@@ -35,6 +35,7 @@ export function ModalOngs({ handleClose, goToOng }: ModalOngsProps) {
                 <View style={styles.Modal}>
                     <Text style={styles.TextLoc}>Localização das ONGs</Text>
 
+                <ScrollView  horizontal={false} showsVerticalScrollIndicator={false}>
                     <View style={styles.WrapperLocs}>
 
                         {ongs.map((ong) => (
@@ -56,6 +57,7 @@ export function ModalOngs({ handleClose, goToOng }: ModalOngsProps) {
                         ))}
 
                     </View>
+                    </ScrollView>
                 </View>
             </View>
         </SafeAreaView>
