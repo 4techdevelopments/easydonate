@@ -200,7 +200,7 @@ export default function Cadastro() {
             return;
         }
 
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(email)) {
             mostrarModalErro("Digite um e-mail válido!");
             // Alert.alert("Erro", "Digite um e-mail válido!");
@@ -306,7 +306,7 @@ export default function Cadastro() {
             return;
         }
 
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(emailDoador)) {
             mostrarModalErro("Digite um e-mail válido!");
             // Alert.alert("Erro", "Digite um e-mail válido!");
