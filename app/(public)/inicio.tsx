@@ -65,8 +65,8 @@ export default function Index() {
                 <Text style={styles.BtnTextLogin}>{Inicio.login}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.BtnCadastro}>
-                <Text style={styles.BtnTextCadastro} onPress={() => router.navigate('/(public)/cadastro')}>{Inicio.cadastro}</Text>
+              <TouchableOpacity style={styles.BtnCadastro} onPress={() => router.navigate('/(public)/cadastro')}>
+                <Text style={styles.BtnTextCadastro}>{Inicio.cadastro}</Text>
               </TouchableOpacity>
 
               <Text style={styles.P}>{Inicio.transformar_generosidade}</Text>
