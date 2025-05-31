@@ -51,12 +51,20 @@ export default function OngDetalhes() {
         try {
             await api.put(`/Ong/${idOng}`, ong);
             Alert.alert('Sucesso', 'Dados atualizados com sucesso');
-        } catch (error) {
-            Alert.alert('Erro', 'Erro ao atualizar dados');
+        } catch (error: any) {
+
+            let msg = "ONG não encontrada!";
+            if (typeof error.response?.data === "string") {
+                msg = error.response.data;
+            } else if (error.response?.data?.message) {
+                msg = error.response.data.message;
+            }
+
+            Alert.alert('Erro', msg);
         }
     };
 
-    if (!ong) {
+    if (loading || !ong) {
         return (
             <View style={styles.Container}>
                 <EasyDonateSvg />

@@ -8,7 +8,6 @@ import { Ong } from "@/types/Ong";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
@@ -23,6 +22,9 @@ export default function Home() {
   // [INPUT PESQUISA]
   const [searchText, setSearchText] = useState<string>('');
 
+  // [FILTROS GERAL/ROUPAS/ETC]
+  const [selectedCategory, setSelectedCategory] = useState<string>('Geral');
+
   // [ONGS]
   const [ongs, setOngs] = useState<Ong[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -35,16 +37,11 @@ export default function Home() {
 
       if (response.status === 200) {
         setOngs(response.data);
+      } else {
+        console.log("Não foi possível caregar as ongs!");
       }
     } catch (error: any) {
-      console.log(error);
-
-      let msg = "Erro ao buscar ONGs!";
-      if (typeof error.response?.data === "string") {
-        msg = error.response.data;
-      } else if (error.response?.data?.message) {
-        msg = error.response.data.message;
-      }
+      //console.log(error);
     } finally {
       setLoading(false);
     }
@@ -54,9 +51,15 @@ export default function Home() {
     fetchOngs();
   }, []);
 
-  const filteredOngs = ongs.filter(ong =>
-    ong.nome?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredOngs = ongs.filter(ong => {
+    const matchesSearch = ong.nome?.toLowerCase().includes(searchText.toLowerCase());
+
+    const matchesCategory =
+    selectedCategory === 'Geral' ||
+    ong.tipoAtividade?.toLowerCase() === selectedCategory.toLowerCase();
+
+    return matchesSearch && matchesCategory;
+  });
 
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -118,31 +121,30 @@ export default function Home() {
 
                 <View style={styles.DivOptions}>
                   <ScrollView horizontal={true} style={styles.ScrollHorizontal} showsHorizontalScrollIndicator={false}>
-                    <TouchableWithoutFeedback>
-                      <View style={styles.OptionsActive}>
-                        <MaterialCommunityIcons name="shoe-sneaker" size={30} />
-                        <Text style={styles.TextOptionsActive}>Tênis</Text>
+                    <TouchableWithoutFeedback onPress={() => setSelectedCategory('Geral')}>
+                      <View style={selectedCategory === 'Geral' ? styles.OptionsActive : styles.Options}>
+                        <Text style={selectedCategory === 'Geral' ? styles.TextOptionsActive : styles.TextOptions}>Geral</Text>
                       </View>
                     </TouchableWithoutFeedback>
 
-                    <TouchableWithoutFeedback>
-                      <View style={styles.Options}>
+                    <TouchableWithoutFeedback onPress={() => setSelectedCategory('Roupas')}>
+                      <View style={selectedCategory === 'Roupas' ? styles.OptionsActive : styles.Options}>
                         <Ionicons name="shirt" size={20} />
-                        <Text style={styles.TextOptions}>Roupas</Text>
+                        <Text style={selectedCategory === 'Roupas' ? styles.TextOptionsActive : styles.TextOptions}>Roupas</Text>
                       </View>
                     </TouchableWithoutFeedback>
 
-                    <TouchableWithoutFeedback>
-                      <View style={styles.Options}>
+                    <TouchableWithoutFeedback onPress={() => setSelectedCategory('Alimentos')}>
+                      <View style={selectedCategory === 'Alimentos' ? styles.OptionsActive : styles.Options}>
                         <FontAwesome5 name="hamburger" size={20} />
-                        <Text style={styles.TextOptions}>Alimentos</Text>
+                        <Text style={selectedCategory === 'Alimentos' ? styles.TextOptionsActive : styles.TextOptions}>Alimentos</Text>
                       </View>
                     </TouchableWithoutFeedback>
 
-                    <TouchableWithoutFeedback>
-                      <View style={styles.Options}>
+                    <TouchableWithoutFeedback onPress={() => setSelectedCategory('Dinheiro')}>
+                      <View style={selectedCategory === 'Dinheiro' ? styles.OptionsActive : styles.Options}>
                         <MaterialIcons name="pix" size={25} />
-                        <Text style={styles.TextOptions}>Dinheiro</Text>
+                        <Text style={selectedCategory === 'Dinheiro' ? styles.TextOptionsActive : styles.TextOptions}>Dinheiro</Text>
                       </View>
                     </TouchableWithoutFeedback>
                   </ScrollView>
