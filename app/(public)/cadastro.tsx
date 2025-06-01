@@ -1,4 +1,5 @@
 import api from "@/api/axios";
+import Dropdown from "@/components/dropdown";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import RadioSelector from "@/components/radioGroup";
 import { Entypo } from '@expo/vector-icons';
@@ -451,13 +452,13 @@ export default function Cadastro() {
 
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Tipo Doador*</Text>
-                                            <TextInput
-                                                placeholder="Tipo Pessoa: PF ou PJ"
-                                                maxLength={2}
-                                                value={tipoPessoa}
-                                                onChangeText={setTipoPessoa}
-                                                keyboardType="default"
-                                                style={styles.Input}
+                                            <Dropdown 
+                                                data={[
+                                                    {value: "PF", label: "Pessoa Física"},
+                                                    {value: "PJ", label: "Pessoa Jurídica"}
+                                                ]}
+                                                onChange={(item) => setTipoPessoa(item.value)}
+                                                placeholder="Selecione..."
                                             />
                                         </View>
 
@@ -680,14 +681,16 @@ export default function Cadastro() {
                                             />
                                         </View>
                                         <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Atividade*</Text>
-                                            <TextInput
-                                                placeholder="Tipo de atividade"
-                                                maxLength={255}
-                                                value={tipoAtividade}
-                                                onChangeText={setTipoAtividade}
-                                                keyboardType="default"
-                                                style={styles.Input}
+                                            <Text style={styles.Labels}>Tipo Doação*</Text>
+                                            <Dropdown 
+                                                data={[
+                                                    {value: "Roupas", label: "Roupas"},
+                                                    {value: "Dinheiro", label: "Dinheiro"},
+                                                    {value: "Alimentos", label: "Alimentos / Ração"},
+                                                    {value: "Geral", label: "Abrange qualquer tipo de doação"}
+                                                ]}
+                                                onChange={(item) => setTipoAtividade(item.value)}
+                                                placeholder="Selecione..."
                                             />
                                         </View>
                                         <View style={styles.DivCadastro}>
@@ -1123,7 +1126,9 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         fontFamily: "Montserrat",
         fontSize: 14,
-        marginRight: "5%"
+        marginRight: "5%",
+        borderWidth: 1,
+        borderColor: Colors.GRAY
     },
     InputMini: {
         width: "20%",
@@ -1131,7 +1136,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
         borderRadius: 5,
         fontFamily: "Montserrat",
-        fontSize: 14
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: Colors.GRAY
     },
     InputDdd: {
         width: "25%",
@@ -1142,7 +1149,9 @@ const styles = StyleSheet.create({
         fontFamily: "Montserrat",
         fontSize: 14,
         marginRight: "5%",
-        textAlign: "center"
+        textAlign: "center",
+        borderWidth: 1,
+        borderColor: Colors.GRAY
     },
     InputTel: {
         width: "70%",
@@ -1151,7 +1160,9 @@ const styles = StyleSheet.create({
         paddingRight: 15,
         borderRadius: 5,
         fontFamily: "Montserrat",
-        fontSize: 14
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: Colors.GRAY
     },
     Input: {
         width: "100%",
@@ -1160,7 +1171,9 @@ const styles = StyleSheet.create({
         paddingRight: 0,
         borderRadius: 5,
         fontFamily: "Montserrat",
-        fontSize: 14
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: Colors.GRAY
     },
     BtnCadastrar: {
         width: "100%",
