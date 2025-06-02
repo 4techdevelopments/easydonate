@@ -1,3 +1,4 @@
+import { ongs } from "@/locations/ongs";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,23 +8,6 @@ type ModalOngsProps = {
     handleClose: () => void;
     goToOng: (latitude: number, longitude: number) => void;
 };
-
-const ongs = [
-    {
-        id: 1,
-        nome: "ONG Viver - Crianças e Adolescentes com Câncer",
-        latitude: -23.329989247504727,
-        longitude: -51.15615050407202,
-        endereco: "R. Bernardo Sayão, 319",
-    },
-    {
-        id: 2,
-        nome: "ONG Patrulha das Águas",
-        latitude: -23.334020901739546, 
-        longitude: -51.15835446501554,
-        endereco: "R. da Canoagem, 10",
-    }
-];
 
 export function ModalOngs({ handleClose, goToOng }: ModalOngsProps) {
 
@@ -35,28 +19,28 @@ export function ModalOngs({ handleClose, goToOng }: ModalOngsProps) {
                 <View style={styles.Modal}>
                     <Text style={styles.TextLoc}>Localização das ONGs</Text>
 
-                <ScrollView  horizontal={false} showsVerticalScrollIndicator={false}>
-                    <View style={styles.WrapperLocs}>
+                    <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+                        <View style={styles.WrapperLocs}>
 
-                        {ongs.map((ong) => (
-                            <TouchableOpacity 
-                                key={ong.id}
-                                style={styles.OptionsLoc} 
-                                onPress={() => {
-                                    goToOng(ong.latitude, ong.longitude);
-                                    handleClose();
-                                }}>
-                            <View style={styles.WrapperIcon}>
-                                <Ionicons name="location-sharp" size={40} color={Colors.ORANGE} />
-                            </View>
-                            <View style={styles.Descricao}>
-                                <Text style={styles.NomeOng}>{ong.nome}</Text>
-                                <Text style={styles.InformacaoOng}>{ong.endereco}</Text>
-                            </View>
-                        </TouchableOpacity>
-                        ))}
+                            {ongs.map((ong) => (
+                                <TouchableOpacity
+                                    key={ong.id}
+                                    style={styles.OptionsLoc}
+                                    onPress={() => {
+                                        goToOng(ong.latitude, ong.longitude);
+                                        handleClose();
+                                    }}>
+                                    <View style={styles.WrapperIcon}>
+                                        <Ionicons name="location-sharp" size={40} color={Colors.ORANGE} />
+                                    </View>
+                                    <View style={styles.Descricao}>
+                                        <Text style={styles.NomeOng}>{ong.nome}</Text>
+                                        <Text style={styles.InformacaoOng}>{ong.endereco}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
 
-                    </View>
+                        </View>
                     </ScrollView>
                 </View>
             </View>
