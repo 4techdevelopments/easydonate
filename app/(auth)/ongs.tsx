@@ -2,6 +2,7 @@ import BottomNavigation from '@/components/bottomNavigation';
 import Colors from '@/components/Colors';
 import EasyDonateSvg from '@/components/easyDonateSvg';
 import { ModalOngs } from '@/components/modalOngs';
+import { ongs } from '@/locations/ongs';
 import PrivateRoute from '@/routes/PrivateRoute';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useFonts } from 'expo-font';
@@ -16,23 +17,6 @@ const REGIAO_INICIAL = {
     latitudeDelta: 0.07,
     longitudeDelta: 0.07,
 };
-
-const ongs = [
-    {
-        id: 1,
-        nome: "ONG Viver - Crianças e Adolescentes com Câncer",
-        latitude: -23.329989247504727,
-        longitude: -51.15615050407202,
-        endereco: "R. Bernardo Sayão, 319",
-    },
-    {
-        id: 2,
-        nome: "ONG Patrulha das Águas",
-        latitude: -23.334020901739546, 
-        longitude: -51.15835446501554,
-        endereco: "R. da Canoagem, 10",
-    }
-];
 
 export default function Ongs() {
     const [visibleModal, setVisibleModal] = useState(false);
@@ -73,8 +57,8 @@ export default function Ongs() {
                         showsUserLocation={true}
                         showsMyLocationButton={true}
                     >
-                        {ongs.map((ong) =>(
-                            <Marker 
+                        {ongs.map((ong) => (
+                            <Marker
                                 key={ong.id}
                                 coordinate={{
                                     latitude: ong.latitude,
@@ -103,7 +87,7 @@ export default function Ongs() {
                     onRequestClose={() => setVisibleModal(false)}
                 >
                     <ModalOngs
-                        handleClose={() => setVisibleModal(false)} 
+                        handleClose={() => setVisibleModal(false)}
                         goToOng={goToOng}
                     />
                 </Modal>
