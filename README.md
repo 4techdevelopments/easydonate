@@ -54,6 +54,6 @@ Projeto EasyDonate
    ```
 
 10. Atualizando a sua branch para pegar as alterações da Main (certifique-se que esteja na sua branch)
-   ```bash
-   git pull origin main
-   ```
+      ```bash
+      git pull origin main
+      ```
