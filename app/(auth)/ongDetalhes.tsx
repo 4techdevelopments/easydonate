@@ -14,20 +14,18 @@ export default function OngDetalhes() {
     const { idOng } = useLocalSearchParams();
     const { usuario } = useAuth();
     const router = useRouter();
-
     const [ong, setOng] = useState<Ong | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const isDono = usuario?.tipoUsuario === 'Ong' && usuario?.idUsuario === ong?.idUsuario;
+    const isDoador = usuario?.tipoUsuario === 'Doador';
 
     const fetchOng = async () => {
         try {
             setLoading(true);
             const response = await api.get<Ong>(`/Ong/${idOng}`);
 
-            if (response.status === 200) {
-                setOng(response.data);
-            }
+            setOng(response.data);
             //console.log(response.data);
         } catch (error: any) {
             console.log(error)
@@ -38,6 +36,8 @@ export default function OngDetalhes() {
             } else if (error.response?.data?.message) {
                 msg = error.response.data.message;
             }
+
+            Alert.alert('Erro', msg);
         } finally {
             setLoading(false);
         }
@@ -95,7 +95,7 @@ export default function OngDetalhes() {
                                         value={ong.nome}
                                         maxLength={255}
                                         onChangeText={(text) => setOng({ ...ong, nome: text })}
-                                        editable={isDono}
+                                        editable={false}
                                     />
                                 </View>
 
@@ -106,7 +106,7 @@ export default function OngDetalhes() {
                                         value={ong.tipoAtividade}
                                         maxLength={255}
                                         onChangeText={(text) => setOng({ ...ong, tipoAtividade: text })}
-                                        editable={isDono}
+                                        editable={false}
                                     />
                                 </View>
 
@@ -166,6 +166,28 @@ export default function OngDetalhes() {
                                 </View>
 
                                 <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Rede Social</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={ong.redeSocial || ""}
+                                        maxLength={9}
+                                        onChangeText={(text) => setOng({ ...ong, redeSocial: text })}
+                                        editable={isDono}
+                                    />
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Site</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={ong.site || ""}
+                                        maxLength={9}
+                                        onChangeText={(text) => setOng({ ...ong, site: text })}
+                                        editable={isDono}
+                                    />
+                                </View>
+
+                                <View style={styles.inputGroup}>
                                     <Text style={styles.label}>Descrição da ONG</Text>
                                     <TextInput
                                         style={styles.TextArea}
@@ -182,7 +204,13 @@ export default function OngDetalhes() {
                         <View style={styles.Footer}>
                             {isDono && (
                                 <TouchableOpacity onPress={handleSave} style={styles.BtnSalvar}>
-                                    <Text style={styles.TextSalvar}>Salvar</Text>
+                                    <Text style={styles.TextSalvar}>Salvar Alterações</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {isDoador && (
+                                <TouchableOpacity style={styles.BtnSalvar}>
+                                    <Text style={styles.TextSalvar}>Doe Agora</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -254,7 +282,6 @@ const styles = StyleSheet.create({
     },
     TextArea: {
         backgroundColor: Colors.INPUT_GRAY,
-        height: 100,
         borderRadius: 5,
         fontFamily: "Montserrat"
     },
