@@ -1,30 +1,117 @@
+import api from "@/api/axios";
 import { useAuth } from "@/routes/AuthContext"; // ajuste o caminho se necessário
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Colors from "../../components/Colors"; // ajuste caminho para as cores
 
 export default function Conta() {
-    const { usuario, atualizarUsuario } = useAuth();
+    const { usuario } = useAuth();
 
     const [nome, setNome] = useState(usuario?.nome || "");
-    const [email, setEmail] = useState(usuario?.email || "");
-    const [password, setSenha] = useState(usuario?.senha || "");
-    const [repeatPassword, setSenha2] = useState(usuario?.senha || "");
+    const [email, setEmail] = useState(usuario?.email || '');
+    const [senha, setSenha] = useState(usuario?.senha || "");
+    const [senha2, setSenha2] = useState(usuario?.senha || "");
+    const [dataCriacao, setDataCriacao] = useState('');
+    const [tipoUsuario, setTipoUsuario] = useState('');
 
-    const salvarAlteracoes = () => {
-        if (!nome.trim() || !email.trim()) {
-            Alert.alert("Erro", "Nome e email não podem ficar vazios.");
+    // [PEGAR USUARIO]
+    const fetchUsuario = async () => {
+        try {
+            const response = await api.get(`/Usuario/${usuario.idUsuario}`);
+
+            if (response.status === 200) {
+                setDataCriacao(response.data.dataCriacao);
+                setTipoUsuario(response.data.tipoUsuario);
+            }
+        } catch (error: any) {
+            console.log("Erro ao puxar dados:", error);
+
+            let msg = "Erro ao puxar usuário!";
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
+            }
+
+            Alert.alert(msg);
+        }
+    }
+
+    useEffect(() => {
+        fetchUsuario();
+    }, []);
+
+    // [LIMPAR SENHA]
+    const resetSenha = () => {
+        setSenha('');
+        setSenha2('');
+    };
+
+    // [ATUALIZAR USUÁRIO]
+    const handleSave = async () => {
+        if (!email.trim() || !senha.trim() || !senha2.trim()) {
+            Alert.alert("Erro", "Preencha os campos corretamente!");
             return;
         }
 
-        atualizarUsuario({ nome, email });
-        Alert.alert("Sucesso", "Dados atualizados com sucesso!");
-    };
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert("Erro", "Digite um e-mail válido!");
+            return;
+        }
 
-    // [SENHA VISIVEL]
+        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!senhaRegex.test(senha)) {
+            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
+            return;
+        }
+
+        if (senha !== senha2) {
+            Alert.alert("Erro", "As senhas não coincidem!");
+            return;
+        }
+
+        let bodyRequest: any = {
+            email,
+            senha,
+            dataCriacao,
+            tipoUsuario
+        }
+
+        try {
+            const response = await api.put(`/Usuario/${usuario.idUsuario}`, bodyRequest);
+
+            if (response.status === 200) {
+                Alert.alert("Sucesso", "Usuário atualizado com sucesso!");
+                resetSenha();
+            }
+        } catch (error: any) {
+            console.log("Erro ao atualizar:", error);
+
+            let msg = "Erro ao atualizar usuário!";
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
+            }
+
+            Alert.alert(msg);
+        }
+    }
+
     // [SENHA VISIVEL]
     const [senhasVisiveis, setSenhasVisiveis] = useState<boolean[]>([false, false, false, false]);
 
@@ -45,8 +132,6 @@ export default function Conta() {
                             <TouchableOpacity style={styles.BtnVoltar} onPress={() => router.back()}>
                                 <Feather name="chevron-left" style={styles.IconVoltar} />
                             </TouchableOpacity>
-
-
                         </View>
 
 
@@ -70,6 +155,7 @@ export default function Conta() {
                                             maxLength={255}
                                             onChangeText={setNome}
                                             placeholder="Digite seu nome"
+                                            editable={false}
                                         />
                                     </View>
                                 </View>
@@ -95,9 +181,9 @@ export default function Conta() {
 
                                         <TextInput
                                             style={styles.inputWithIcon}
-                                            value={password}
+                                            value={senha}
                                             onChangeText={setSenha}
-                                            placeholder="Digite seua senha"
+                                            placeholder="Digite sua senha"
                                             maxLength={128}
 
                                             keyboardType="default"
@@ -120,9 +206,9 @@ export default function Conta() {
 
                                         <TextInput
                                             style={styles.inputWithIcon}
-                                            value={repeatPassword}
+                                            value={senha2}
                                             onChangeText={setSenha2}
-                                            placeholder="Digite sua senha"
+                                            placeholder="Repita sua senha"
                                             maxLength={128}
 
                                             keyboardType="default"
@@ -142,8 +228,8 @@ export default function Conta() {
 
                             </View>
                             <View style={styles.WrapperBtn}>
-                                <TouchableOpacity style={styles.button} onPress={salvarAlteracoes}>
-                                    <Text style={styles.buttonText}>Salvar</Text>
+                                <TouchableOpacity style={styles.button} onPress={handleSave}>
+                                    <Text style={styles.buttonText}>Salvar Alterações</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -164,10 +250,7 @@ const styles = StyleSheet.create({
         fontSize: 18
     },
     BtnVoltar: {
-        position: "absolute",
-        left: 0,
-        top: "50%",
-        transform: [{ translateY: -20 }],
+        display: "flex",
         justifyContent: "center",
         alignItems: "center",
         width: 40,
@@ -176,6 +259,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderColor: Colors.ORANGE,
         backgroundColor: Colors.BRANCO_BTN_VOLTAR,
+        marginBottom: 20
     },
     IconEye: {
         fontSize: 20,
@@ -205,12 +289,10 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     Header: {
-        height: 60,
-        justifyContent: "center",
-        alignItems: "center",
-        position: "relative",
-        marginTop: 30,
-        marginBottom: 10,
+        width: "100%",
+        height: "15%",
+        display: "flex",
+        justifyContent: "flex-end"
     },
     ImgEasyDonate: {
         width: 120,
