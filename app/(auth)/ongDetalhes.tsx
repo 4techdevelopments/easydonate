@@ -1,6 +1,7 @@
 import api from '@/api/axios';
 import Colors from '@/components/Colors';
 import EasyDonateSvg from '@/components/easyDonateSvg';
+import ModalDoacao from '@/components/modalDoacao';
 import { useAuth } from '@/routes/AuthContext';
 import PrivateRoute from '@/routes/PrivateRoute';
 import { Ong } from '@/types/Ong';
@@ -16,6 +17,7 @@ export default function OngDetalhes() {
     const router = useRouter();
     const [ong, setOng] = useState<Ong | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
 
     const isDono = usuario?.tipoUsuario === 'Ong' && usuario?.idUsuario === ong?.idUsuario;
     const isDoador = usuario?.tipoUsuario === 'Doador';
@@ -76,6 +78,12 @@ export default function OngDetalhes() {
         <PrivateRoute>
             <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BG }}>
                 <View style={styles.Container}>
+                    <ModalDoacao 
+                        visible={modalVisible}
+                        onClose={() => setModalVisible(false)}
+                        ong={ong}
+                    />
+
                     <View style={styles.Wrapper}>
 
                         <View style={styles.Header}>
@@ -209,7 +217,7 @@ export default function OngDetalhes() {
                             )}
 
                             {isDoador && (
-                                <TouchableOpacity style={styles.BtnSalvar}>
+                                <TouchableOpacity style={styles.BtnSalvar} onPress={() => setModalVisible(true)}>
                                     <Text style={styles.TextSalvar}>Doe Agora</Text>
                                 </TouchableOpacity>
                             )}
