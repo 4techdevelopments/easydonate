@@ -12,9 +12,11 @@ interface DropdownProps {
     data: OptionItem[];
     onChange: (item: OptionItem) => void;
     placeholder: string;
+    buttonStyle?: object;
+    optionsStyle?: object;
 }
 
-export default function Dropdown({ data, onChange, placeholder }: DropdownProps) {
+export default function Dropdown({ data, onChange, placeholder, buttonStyle, optionsStyle }: DropdownProps) {
     const [expanded, setExpanded] = useState(false);
     const toggleExpanded = useCallback(() => setExpanded(!expanded), [expanded])
     const [value, setValue] = useState('');
@@ -27,13 +29,13 @@ export default function Dropdown({ data, onChange, placeholder }: DropdownProps)
 
     return (
         <View>
-            <Pressable style={styles.Button} onPress={toggleExpanded}>
+            <Pressable style={[styles.Button, buttonStyle]} onPress={toggleExpanded}>
                 <Text style={styles.TextDrop}>{value || placeholder}</Text>
                 <AntDesign name={expanded ? "caretup" : "caretdown"} />
             </Pressable>
             {
                 expanded && (
-                    <View style={styles.Options}>
+                    <View style={[styles.Options, optionsStyle]}>
                         {data.map((item) => (
                             <TouchableOpacity
                                 key={item.value}
