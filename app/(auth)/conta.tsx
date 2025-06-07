@@ -11,7 +11,7 @@ export default function Conta() {
     const { usuario } = useAuth();
 
     const [nome, setNome] = useState(usuario?.nome || "");
-    const [email, setEmail] = useState(usuario?.email || '');
+    const [email, setEmail] = useState('');
     const [senha, setSenha] = useState(usuario?.senha || "");
     const [senha2, setSenha2] = useState(usuario?.senha || "");
     const [dataCriacao, setDataCriacao] = useState('');
@@ -23,6 +23,7 @@ export default function Conta() {
             const response = await api.get(`/Usuario/${usuario.idUsuario}`);
 
             if (response.status === 200) {
+                setEmail(response.data.email);
                 setDataCriacao(response.data.dataCriacao);
                 setTipoUsuario(response.data.tipoUsuario);
             }

@@ -1,6 +1,6 @@
 import { Ong } from "@/types/Ong";
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Colors from "./Colors";
 import Dropdown from "./dropdown";
 
@@ -15,8 +15,18 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
     const [metodoEnvio, setMetodoEnvio] = useState('');
     const [quantidade, setQuantidade] = useState('');
     const [descricao, setDescricao] = useState('');
+    const [endereco, setEndereco] = useState('');
     const [dataColeta, setDataColeta] = useState('');
     const [horaColeta, setHoraColeta] = useState('');
+
+    // [PUXAR ENDEREÇO DA ONG]
+    useEffect(() => {
+        if (ong.rua && ong.numero) {
+            setEndereco(`${ong.rua}, ${ong.numero}`);
+        } else if (ong.rua && !ong.numero) {
+            setEndereco(`${ong.rua}`);
+        }
+    }, [ong.rua, ong.numero]);
 
     // [APARECER OS CAMPOS DE ACORDO COM QUE TIPO DE DOAÇÃO A ONG ACEITA]
     const getTipoDoacaoOptions = () => {
@@ -53,6 +63,32 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         setDataColeta('');
         setHoraColeta('');
         onClose();
+    }
+
+    const cadastrarDoacao = async () => {
+        if (!tipoItem) {
+            Alert.alert("Erro", "Selecione um tipo de doação!");
+            return;
+        }
+
+        if (tipoItem === "Dinheiro") {
+            if (!quantidade) {
+                Alert.alert("Erro", "Preencha todos os campos!");
+                return;
+            }
+        }
+
+        if (tipoItem && tipoItem !== "Dinheiro") {
+            if (!metodoEnvio || !quantidade || !descricao) {
+                Alert.alert("Erro", "Preencha todos os campos!");
+                return;
+            }
+
+            if (metodoEnvio === "Coleta" && (!quantidade || !descricao || !dataColeta || !horaColeta)) {
+                Alert.alert("Erro", "Preencha todos os campos!");
+                return;
+            }
+        }
     }
 
     return (
@@ -123,6 +159,20 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                             </View>
                         )}
 
+                        {(tipoItem !== "" && metodoEnvio === "Entrega") && (
+                            <View style={styles.InputNormal}>
+                                <Text style={styles.Label}>Endereço da ONG</Text>
+                                <TextInput
+                                    placeholder="Endereço"
+                                    maxLength={255}
+                                    style={styles.Input}
+                                    value={endereco}
+                                    onChangeText={setEndereco}
+                                    editable={false}
+                                />
+                            </View>
+                        )}
+
                         {metodoEnvio === "Coleta" && (
                             <View style={styles.InputDuplo}>
                                 <View style={styles.WrapperInputMini}>
@@ -158,7 +208,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                         <Text style={styles.TextBtnfechar}>Fechar</Text>
                     </Pressable>
 
-                    <TouchableOpacity style={styles.BtnDoar} activeOpacity={0.8}>
+                    <TouchableOpacity style={styles.BtnDoar} activeOpacity={0.8} onPress={cadastrarDoacao}>
                         <Text style={styles.TextBtnDoar}>Doar</Text>
                     </TouchableOpacity>
                 </View>
