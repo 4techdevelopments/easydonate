@@ -1,3 +1,6 @@
+import api from "@/api/axios";
+import { useAuth } from "@/routes/AuthContext";
+import { Doador } from "@/types/Doador";
 import { Ong } from "@/types/Ong";
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -11,6 +14,7 @@ type ModalDoacaoProps = {
 };
 
 export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps) {
+    const { usuario } = useAuth();
     const [tipoItem, setTipoItem] = useState('');
     const [metodoEnvio, setMetodoEnvio] = useState('');
     const [quantidade, setQuantidade] = useState('');
@@ -18,6 +22,8 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
     const [endereco, setEndereco] = useState('');
     const [dataColeta, setDataColeta] = useState('');
     const [horaColeta, setHoraColeta] = useState('');
+    const [idDoador, setIdDoador] = useState<Number>();
+    const [status] = useState('');
 
     // [PUXAR ENDEREÇO DA ONG]
     useEffect(() => {
@@ -65,6 +71,25 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         onClose();
     }
 
+    // [PEGAR ID DOADOR]
+    const fetchDoador = async () => {
+        try {
+            const response = await api.get<Doador>(`/Doador/${usuario.idUsuario}`);
+
+            if (response.status === 200) {
+                setIdDoador(response.data.idDoador);
+            } else {
+                return;
+            }
+        } catch (error: any) {
+            //console.log(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchDoador();
+    }, []);
+
     const cadastrarDoacao = async () => {
         if (!tipoItem) {
             Alert.alert("Erro", "Selecione um tipo de doação!");
@@ -72,21 +97,135 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         }
 
         if (tipoItem === "Dinheiro") {
-            if (!quantidade) {
-                Alert.alert("Erro", "Preencha todos os campos!");
-                return;
+            const regexQuantidade = /^\d{1,8}([.,]\d{1,2})?$/;
+
+            if (regexQuantidade.test(quantidade)) {
+                let bodyRequestDoacao: any = {
+                    idDoador,
+                    idOng: ong.idOng,
+                    tipoItem,
+                    quantidade: parseFloat(quantidade.replace(',', '.')),
+                    descricao: "Doação em dinheiro",
+                    status: "Pendente"
+                };
+
+                try {
+                    const response = await api.post('/Doacao', bodyRequestDoacao);
+
+                    if (response.status === 201) {
+                        handleClose();
+                        Alert.alert("Sucesso", "Doação realizada com sucesso!");
+                        return;
+                    }
+                } catch (error: any) {
+                    console.log("Erro ao cadastrar:", error);
+
+                    let msg = "Erro ao realizar cadastro!";
+
+                    if (error?.response) {
+                        if (typeof error.response.data === 'string') {
+                            msg = error.response.data;
+                        } else if (error.response.data?.message) {
+                            msg = error.response.data.message;
+                        }
+                    } else if (error?.message) {
+                        msg = error.message;
+                    }
+
+                    Alert.alert(msg);
+                }
+            } else {
+                Alert.alert('Erro', 'Por favor, insira um valor válido com até 8 dígitos inteiros e 2 casas decimais.');
             }
         }
 
         if (tipoItem && tipoItem !== "Dinheiro") {
-            if (!metodoEnvio || !quantidade || !descricao) {
+            if (!metodoEnvio) {
+                Alert.alert("Erro", "Selecione um método de envio!");
+                return;
+            }
+
+            const regexQuantidade = /^\d{1,8}([.,]\d{1,2})?$/;
+            if (regexQuantidade.test(quantidade) && descricao) {
+                let bodyRequestDoacao: any = {
+                    idDoador,
+                    idOng: ong.idOng,
+                    tipoItem,
+                    quantidade: parseFloat(quantidade.replace(',', '.')),
+                    descricao,
+                    status: "Andamento"
+                };
+
+                try {
+                    const response = await api.post('/Doacao', bodyRequestDoacao);
+
+                    if (response.status === 201) {
+                        handleClose();
+                        Alert.alert("Doação realizada com sucesso!");
+                        return;
+                    }
+                } catch (error: any) {
+                    console.log("Erro ao cadastrar:", error);
+
+                    let msg = "Erro ao realizar cadastro!";
+
+                    if (error?.response) {
+                        if (typeof error.response.data === 'string') {
+                            msg = error.response.data;
+                        } else if (error.response.data?.message) {
+                            msg = error.response.data.message;
+                        }
+                    } else if (error?.message) {
+                        msg = error.message;
+                    }
+
+                    Alert.alert(msg);
+                }
+            } else if (!regexQuantidade.test(quantidade) || !descricao) {
                 Alert.alert("Erro", "Preencha todos os campos!");
                 return;
             }
 
-            if (metodoEnvio === "Coleta" && (!quantidade || !descricao || !dataColeta || !horaColeta)) {
+            if (metodoEnvio === "Coleta" && (!regexQuantidade.test(quantidade) || !descricao || !dataColeta || !horaColeta)) {
                 Alert.alert("Erro", "Preencha todos os campos!");
                 return;
+            } else if (metodoEnvio === "Coleta" && (regexQuantidade.test(quantidade) && descricao && dataColeta && horaColeta)) {
+                let bodyRequestDoacao: any = {
+                    idDoador,
+                    idOng: ong.idOng,
+                    tipoItem,
+                    quantidade: parseFloat(quantidade.replace(',', '.')),
+                    descricao,
+                    status: "Pendente",
+                    dataColeta,
+                    horaColeta
+                };
+
+                try {
+                    const response = await api.post('/Doacao', bodyRequestDoacao);
+
+                    if (response.status === 201) {
+                        handleClose();
+                        Alert.alert("Doação realizada com sucesso!");
+                        return;
+                    }
+                } catch (error: any) {
+                    console.log("Erro ao cadastrar:", error);
+
+                    let msg = "Erro ao realizar cadastro!";
+
+                    if (error?.response) {
+                        if (typeof error.response.data === 'string') {
+                            msg = error.response.data;
+                        } else if (error.response.data?.message) {
+                            msg = error.response.data.message;
+                        }
+                    } else if (error?.message) {
+                        msg = error.message;
+                    }
+
+                    Alert.alert(msg);
+                }
             }
         }
     }
@@ -132,12 +271,26 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                             </View>
                         )}
 
-                        {tipoItem !== "" && (
+                        {tipoItem === "Dinheiro" && (
+                            <View style={styles.InputNormal}>
+                                <Text style={styles.Label}>Valor em Reais</Text>
+                                <TextInput
+                                    placeholder="0.00"
+                                    maxLength={10}
+                                    style={styles.Input}
+                                    keyboardType="decimal-pad"
+                                    value={quantidade}
+                                    onChangeText={setQuantidade}
+                                />
+                            </View>
+                        )}
+
+                        {(tipoItem !== "Dinheiro" && tipoItem !== "") && (
                             <View style={styles.InputNormal}>
                                 <Text style={styles.Label}>Quantidade</Text>
                                 <TextInput
-                                    placeholder="0.00"
-                                    maxLength={13}
+                                    placeholder="0"
+                                    maxLength={10}
                                     style={styles.Input}
                                     keyboardType="decimal-pad"
                                     value={quantidade}
@@ -150,7 +303,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                             <View style={styles.InputNormal}>
                                 <Text style={styles.Label}>Descrição</Text>
                                 <TextInput
-                                    placeholder="Camisetas, tênis, etc"
+                                    placeholder="Ex: 10Kg arroz, 5kg feijão"
                                     maxLength={255}
                                     style={styles.Input}
                                     value={descricao}
@@ -169,6 +322,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                                     value={endereco}
                                     onChangeText={setEndereco}
                                     editable={false}
+                                    multiline={true}
                                 />
                             </View>
                         )}

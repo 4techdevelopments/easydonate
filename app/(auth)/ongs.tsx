@@ -6,8 +6,9 @@ import { ongs } from '@/locations/ongs';
 import PrivateRoute from '@/routes/PrivateRoute';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useFonts } from 'expo-font';
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import * as Location from 'expo-location';
+import { useEffect, useState } from 'react';
+import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,9 +19,37 @@ const REGIAO_INICIAL = {
     longitudeDelta: 0.07,
 };
 
+type LocationCoords = {
+    latitude: number;
+    longitude: number;
+    altitude: number | null;
+    accuracy: number | null;
+};
+
 export default function Ongs() {
     const [visibleModal, setVisibleModal] = useState(false);
     const [mapRegion, setMapRegion] = useState(REGIAO_INICIAL);
+    const [userLocation, setUserLocation] = useState<LocationCoords | null>(null);
+    const [locationPermission, setLocationPermission] = useState(false);
+
+     useEffect(() => {
+        (async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status === 'granted') {
+                setLocationPermission(true);
+                const location = await Location.getCurrentPositionAsync({});
+                setUserLocation(location.coords);
+                setMapRegion({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                    latitudeDelta: 0.07,
+                    longitudeDelta: 0.07,
+                });
+            } else {
+                Alert.alert('A permissão para acessar a localização foi negada!');
+            }
+        })();
+    }, []);
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -54,7 +83,7 @@ export default function Ongs() {
                         style={StyleSheet.absoluteFill}
                         region={mapRegion}
                         onRegionChangeComplete={(region) => setMapRegion(region)}
-                        showsUserLocation={true}
+                        showsUserLocation={locationPermission}
                         showsMyLocationButton={true}
                     >
                         {ongs.map((ong) => (
@@ -116,10 +145,10 @@ const styles = StyleSheet.create({
         height: "9%",
         position: "absolute",
         left: 0,
-        top: 20,
+        top: 25,
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-end",
+        alignItems: "flex-start",
         paddingLeft: "5%",
         paddingRight: "5%"
     },

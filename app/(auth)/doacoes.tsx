@@ -36,7 +36,7 @@ type Doacao = {
 const MOCK_DOACOES: Doacao[] = [
     { id: 1, status: "Em andamento", progresso: 7, total: 10, titulo: "Alimentos", peso: "10 kg", data: "08/04/2025", ong: "ONG Viver", icone: "fastfood" },
     { id: 2, status: "Pendentes", progresso: 0, total: 5, titulo: "Roupas", peso: "3 kg", data: "10/04/2025", ong: "ONG Esperança", icone: "checkroom" },
-    { id: 3, status: "Concluídas", progresso: 5, total: 5, titulo: "Brinquedos", peso: "2 kg", data: "05/04/2025", ong: "ONG Feliz", icone: "toys" },
+    { id: 3, status: "Concluídas", progresso: 1, total: 1, titulo: "Dinheiro", peso: "R$ 1000,00", data: "05/04/2025", ong: "ONG Feliz", icone: "pix" },
 ];
 
 function CardDoacao({ doacao }: { doacao: Doacao }) {
