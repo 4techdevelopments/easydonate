@@ -4,16 +4,10 @@ import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Feather } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
+import * as ImagePicker from 'expo-image-picker';
 import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
@@ -21,12 +15,64 @@ import Colors from "../../components/Colors";
 export default function Configuracoes() {
     const { usuario, logout } = useAuth();
     const [isModalVisible, setModalVisible] = useState(false);
+    const [isPhotoModalVisible, setPhotoModalVisible] = useState(false);
+    const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
 
     const toggleModal = () => setModalVisible(!isModalVisible);
+    const togglePhotoModal = () => setPhotoModalVisible(!isPhotoModalVisible);
+
     const confirmLogout = () => {
         setModalVisible(false);
         logout();
     };
+
+    const takePhotoWithCamera = async () => {
+        // 1. Pedir permissão para a CÂMERA
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Desculpe, precisamos da permissão da câmera para isso funcionar!');
+            return;
+        }
+
+        // 2. Abrir a câmera
+        let result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+
+        // 3. Lidar com o resultado
+        if (!result.canceled) {
+            setNovaFotoUri(result.assets[0].uri);
+            togglePhotoModal(); // Fecha o modal
+        }
+    };
+
+    const pickImageFromGallery = async () => {
+        // 1. Pedir permissão para acessar a galeria
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Desculpe, precisamos da permissão da galeria para isso funcionar!');
+            return;
+        }
+
+        // 2. Abrir a galeria de imagens
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images, // Apenas imagens
+            allowsEditing: true, // Permite ao usuário cortar a imagem
+            aspect: [1, 1], // Força o corte para uma proporção quadrada
+            quality: 1, // Qualidade máxima
+        });
+
+        // 3. Lidar com o resultado
+        if (!result.canceled) {
+            // Por enquanto, vamos apenas mostrar a URI (o caminho local) da imagem no console
+            setNovaFotoUri(result.assets[0].uri);
+            togglePhotoModal(); // Fecha o modal após selecionar
+        }
+    };
+
+    // ...
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -60,20 +106,36 @@ export default function Configuracoes() {
 
                         <ScrollView style={styles.ScrollAll} showsVerticalScrollIndicator={false}>
                             <View style={styles.ProfileCard}>
-                                <TouchableOpacity style={styles.ProfileTouchable}>
+                                <View style={styles.ProfileTouchable}>
                                     <View style={styles.ProfileContent}>
                                         <View style={styles.ProfileLeft}>
-                                            <View style={styles.ProfileIcon}>
-                                                <Feather name="user" size={25} color={Colors.WHITE} />
-                                            </View>
+
+                                            <TouchableOpacity style={styles.ProfileIcon} onPress={togglePhotoModal}>
+                                                {/* Se existe uma nova URI OU o usuário já tem uma foto, mostre a imagem */}
+                                                {novaFotoUri || usuario?.fotoUrl ? (
+                                                    <Image
+                                                        source={{ uri: novaFotoUri || usuario?.fotoUrl }}
+                                                        style={styles.profileImage}
+                                                    />
+                                                ) : (
+                                                    // Senão, mostre o ícone padrão
+                                                    <Feather name="user" size={25} color={Colors.WHITE} />
+                                                )}
+
+                                                {/* Ícone de edição sobreposto */}
+                                                <View style={styles.editIconOverlay}>
+                                                    <Feather name="edit-2" size={12} color={Colors.WHITE} />
+                                                </View>
+                                            </TouchableOpacity>
+
                                             <View>
                                                 <Text style={styles.ProfileName}>{usuario?.nome || "Usuário"}</Text>
                                                 <Text style={styles.ProfileEmail}>{usuario?.email || "Email"}</Text>
                                             </View>
                                         </View>
-                                        <Feather name="chevron-right" size={20} color={Colors.GRAY} />
+
                                     </View>
-                                </TouchableOpacity>
+                                </View>
                             </View>
 
                             <View style={styles.SettingsList}>
@@ -121,6 +183,31 @@ export default function Configuracoes() {
                     </View>
                 </Modal>
 
+                {/* Modal para alterar a foto de perfil */}
+                <Modal
+                    isVisible={isPhotoModalVisible}
+                    onBackdropPress={togglePhotoModal} // Fecha o modal ao tocar fora
+                    style={styles.bottomModal}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
+
+                        <TouchableOpacity style={styles.modalButton} onPress={takePhotoWithCamera}>
+                            <Feather name="camera" size={20} color={Colors.ORANGE} />
+                            <Text style={styles.modalButtonText}>Tirar Foto</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.modalButton} onPress={pickImageFromGallery}>
+                            <Feather name="image" size={20} color={Colors.ORANGE} />
+                            <Text style={styles.modalButtonText}>Escolher da Galeria</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={[styles.modalButton]} onPress={togglePhotoModal}>
+                            <Text style={[styles.modalButtonText, { color: Colors.GRAY }]}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+
             </SafeAreaView>
         </PrivateRoute>
     );
@@ -134,6 +221,37 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         backgroundColor: Colors.BG,
 
+    },
+    //... no final do seu objeto de estilos
+    bottomModal: {
+        justifyContent: 'flex-end',
+        margin: 0,
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        padding: 22,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontFamily: 'Montserrat-Bold',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#eee'
+    },
+    modalButtonText: {
+        marginLeft: 15,
+        fontSize: 16,
+        fontFamily: 'Montserrat',
+        color: Colors.BLACK,
     },
     btnCancel: {
         // backgroundColor: Colors.BG,
@@ -215,6 +333,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 10,
     },
+    // ... no seu objeto de estilos
     ProfileIcon: {
         backgroundColor: Colors.ORANGE,
         width: 50,
@@ -222,9 +341,24 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         justifyContent: "center",
         alignItems: "center",
-        borderWidth: 2,
-        borderColor: Colors.ORANGE,
+        // Remova borderWidth e borderColor se você os tiver, a imagem cuidará da borda.
     },
+    profileImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+    },
+    editIconOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: Colors.ORANGE,
+        borderRadius: 10,
+        padding: 3,
+        borderWidth: 1,
+        borderColor: Colors.WHITE,
+    },
+    // ...
     ProfileName: {
         fontFamily: "Montserrat-Bold",
         fontSize: 16,
