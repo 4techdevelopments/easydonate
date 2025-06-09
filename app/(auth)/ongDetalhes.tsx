@@ -78,7 +78,7 @@ export default function OngDetalhes() {
         <PrivateRoute>
             <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BG }}>
                 <View style={styles.Container}>
-                    <ModalDoacao 
+                    <ModalDoacao
                         visible={modalVisible}
                         onClose={() => setModalVisible(false)}
                         ong={ong}

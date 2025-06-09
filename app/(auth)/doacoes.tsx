@@ -1,10 +1,11 @@
+import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useFonts } from "expo-font";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     LayoutChangeEvent,
     ScrollView,
@@ -33,27 +34,46 @@ type Doacao = {
     icone: React.ComponentProps<typeof FontAwesome6>['name'];
 };
 
-const MOCK_DOACOES: Doacao[] = [
-    { id: 1, status: "Em andamento", progresso: 7, total: 10, titulo: "Alimentos", peso: "10 kg", data: "08/04/2025", ong: "ONG Viver", icone: "fastfood" },
-    { id: 2, status: "Pendentes", progresso: 0, total: 5, titulo: "Roupas", peso: "3 kg", data: "10/04/2025", ong: "ONG Esperança", icone: "checkroom" },
-    { id: 3, status: "Concluídas", progresso: 1, total: 1, titulo: "Dinheiro", peso: "R$ 1000,00", data: "05/04/2025", ong: "ONG Feliz", icone: "pix" },
-];
+const iconePorItem: Record<string, Doacao['icone']> = {
+    "Alimentos": "fastfood",
+    "Roupas": "checkroom",
+    "Dinheiro": "pix",
+    "Outros": "volunteer-activism"
+}
+
+function formatarPeso(titulo: string, peso: string) {
+    const valor = Number(peso);
+
+    switch (titulo) {
+        case "Dinheiro":
+            return `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        case "Roupas":
+            return `${Math.round(valor)} un`;
+        case "Alimentos":
+            return `${peso} kg`;
+        case "Outros":
+            return peso;
+        default:
+            return peso;
+    }
+}
 
 function CardDoacao({ doacao }: { doacao: Doacao }) {
     return (
-
-
 
         <View style={styles.CardContainer}>
             <View style={styles.CardStatus}>
                 <Text style={styles.CardStatusText}>{doacao.status}</Text>
             </View>
+
+            <Text style={styles.ProgressText}>Progresso Doação</Text>
+
             <View style={styles.ProgressWrapper}>
                 <View style={styles.ProgressBarBackground}>
                     <View style={[styles.ProgressBarFill, { width: `${(doacao.progresso / doacao.total) * 100}%` }]} />
                 </View>
-                <Text style={styles.ProgressText}>{doacao.progresso}/{doacao.total} itens doados</Text>
             </View>
+
             <View style={styles.CardContent}>
                 <MaterialIcons name={doacao.icone} size={35} color="#000" />
                 <View style={styles.CardInfo}>
@@ -62,7 +82,7 @@ function CardDoacao({ doacao }: { doacao: Doacao }) {
                     </Text>
 
                     <View style={styles.CardBadge}>
-                        <Text style={styles.CardBadgeText}>{doacao.peso}</Text>
+                        <Text style={styles.CardBadgeText}>{formatarPeso(doacao.titulo, doacao.peso)}</Text>
                     </View>
                     <Text style={styles.CardDate}>{doacao.data}</Text>
                 </View>
@@ -77,15 +97,61 @@ function CardDoacao({ doacao }: { doacao: Doacao }) {
     );
 }
 
-
 export default function Doacoes() {
     const [filtro, setFiltro] = useState<FiltroStatus>("Todas");
     const scrollRef = useRef<ScrollView>(null);
     const optionX = useRef<Record<string, number>>({});
 
-    const [doacoes] = useState<Doacao[]>(MOCK_DOACOES);
+    const [doacoes, setDoacoes] = useState<Doacao[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Função onEditar removida, não existe mais.
+    useEffect(() => {
+        const carregarDoacoes = async () => {
+            try {
+                const response = await api.get("/Doacao");
+                const dados: any[] = response.data;
+
+                const doacoesMapeadas = dados.map((item) => {
+                    const statusTraduzido = traduzirStatus(item.status);
+                    const progresso = statusTraduzido === "Concluídas" ? 1 : statusTraduzido === "Em andamento" ? 0.5 : 0;
+
+                    return {
+                        id: item.idDoacao,
+                        status: statusTraduzido,
+                        progresso,
+                        total: 1,
+                        titulo: item.tipoItem,
+                        peso: `${item.quantidade}`,
+                        data: formatarData(item.dataHoraDoacao),
+                        ong: item.nome,
+                        icone: iconePorItem[item.tipoItem] ?? "volunteer-activism"
+                    };
+                });
+
+                setDoacoes(doacoesMapeadas);
+            } catch (error) {
+                console.error("Erro ao carregar doações:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        carregarDoacoes();
+    }, []);
+
+    const traduzirStatus = (statusApi: string): FiltroStatus => {
+        switch (statusApi) {
+            case "Pendente": return "Pendentes";
+            case "Andamento": return "Em andamento";
+            case "Concluido": return "Concluídas";
+            default: return "Pendentes";
+        }
+    };
+
+    const formatarData = (dataISO: string): string => {
+        const data = new Date(dataISO);
+        return data.toLocaleDateString("pt-BR");
+    };
 
     const onPressOption = (opcao: FiltroStatus) => {
         setFiltro(opcao);
@@ -103,7 +169,7 @@ export default function Doacoes() {
         "Montserrat-BoldItalic": require("../../assets/fonts/Montserrat-BoldItalic.ttf"),
     });
 
-    if (!fontsLoaded) {
+    if (loading || !fontsLoaded) {
         return (
             <View style={[styles.Container, { backgroundColor: Colors.BG }]}>
                 <EasyDonateSvg />
@@ -222,7 +288,7 @@ const styles = StyleSheet.create({
     ProgressWrapper: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
     ProgressBarBackground: { flex: 1, height: 6, backgroundColor: "#e0e0e0", borderRadius: 3, marginRight: 10 },
     ProgressBarFill: { height: 6, backgroundColor: Colors.ORANGE, borderRadius: 3 },
-    ProgressText: { fontFamily: "Montserrat", fontSize: 12, color: "#000" },
+    ProgressText: { fontFamily: "Montserrat", fontSize: 12, color: "#000", marginBottom: 5 },
     CardContent: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     CardInfo: { flex: 1, marginHorizontal: 10 },
     CardTitle: {
