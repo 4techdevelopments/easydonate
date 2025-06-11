@@ -452,10 +452,10 @@ export default function Cadastro() {
 
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Tipo Doador*</Text>
-                                            <Dropdown 
+                                            <Dropdown
                                                 data={[
-                                                    {value: "PF", label: "Pessoa Física"},
-                                                    {value: "PJ", label: "Pessoa Jurídica"}
+                                                    { value: "PF", label: "Pessoa Física" },
+                                                    { value: "PJ", label: "Pessoa Jurídica" }
                                                 ]}
                                                 onChange={(item) => setTipoPessoa(item.value)}
                                                 placeholder="Selecione..."
@@ -682,12 +682,12 @@ export default function Cadastro() {
                                         </View>
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>Tipo Doação*</Text>
-                                            <Dropdown 
+                                            <Dropdown
                                                 data={[
-                                                    {value: "Roupas", label: "Roupas"},
-                                                    {value: "Dinheiro", label: "Dinheiro"},
-                                                    {value: "Alimentos", label: "Alimentos / Ração"},
-                                                    {value: "Geral", label: "Abrange qualquer tipo de doação"}
+                                                    { value: "Roupas", label: "Roupas" },
+                                                    { value: "Dinheiro", label: "Dinheiro" },
+                                                    { value: "Alimentos", label: "Alimentos / Ração" },
+                                                    { value: "Geral", label: "Abrange qualquer tipo de doação" }
                                                 ]}
                                                 onChange={(item) => setTipoAtividade(item.value)}
                                                 placeholder="Selecione..."
@@ -956,7 +956,7 @@ export default function Cadastro() {
                     <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, color: Colors.BLACK }}>
                         {modalMensagem}
                     </Text>
-                    
+
                 </View>
             </Modal>
 
