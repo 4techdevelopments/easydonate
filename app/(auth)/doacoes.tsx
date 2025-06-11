@@ -1,12 +1,15 @@
 import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { MaterialIcons } from "@expo/vector-icons";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useFonts } from "expo-font";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+    Alert,
     LayoutChangeEvent,
     ScrollView,
     StyleSheet,
@@ -17,6 +20,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
+
+const router = useRouter();
 
 const filtros = ["Todas", "Pendentes", "Em andamento", "Concluídas"] as const;
 
@@ -58,10 +63,10 @@ function formatarPeso(titulo: string, peso: string) {
     }
 }
 
-function CardDoacao({ doacao }: { doacao: Doacao }) {
+function CardDoacao({ doacao, onPress }: { doacao: Doacao, onPress: (id: number) => void }) {
     return (
 
-        <View style={styles.CardContainer}>
+        <TouchableOpacity style={styles.CardContainer} onPress={() => onPress(doacao.id)} activeOpacity={0.8}>
             <View style={styles.CardStatus}>
                 <Text style={styles.CardStatusText}>{doacao.status}</Text>
             </View>
@@ -92,12 +97,14 @@ function CardDoacao({ doacao }: { doacao: Doacao }) {
                     <FontAwesome6 name="check-circle" size={16} color={Colors.ORANGE} style={{ marginLeft: 4 }} />
                 </View>
             </View>
-        </View>
+        </TouchableOpacity>
 
     );
 }
 
 export default function Doacoes() {
+    const { usuario } = useAuth();
+
     const [filtro, setFiltro] = useState<FiltroStatus>("Todas");
     const scrollRef = useRef<ScrollView>(null);
     const optionX = useRef<Record<string, number>>({});
@@ -111,7 +118,17 @@ export default function Doacoes() {
                 const response = await api.get("/Doacao");
                 const dados: any[] = response.data;
 
-                const doacoesMapeadas = dados.map((item) => {
+                const doacoesFiltradas = dados.filter(item => {
+                    if (usuario?.tipoUsuario === "Doador") {
+                        return item.idDoador === usuario.doador.idDoador;
+                    } else if (usuario?.tipoUsuario === "Ong") {
+                        return item.idOng === usuario.ong.idOng;
+                    }
+
+                    return false;
+                });
+
+                const doacoesMapeadas = doacoesFiltradas.map((item) => {
                     const statusTraduzido = traduzirStatus(item.status);
                     const progresso = statusTraduzido === "Concluídas" ? 1 : statusTraduzido === "Em andamento" ? 0.5 : 0;
 
@@ -130,7 +147,7 @@ export default function Doacoes() {
 
                 setDoacoes(doacoesMapeadas);
             } catch (error) {
-                console.error("Erro ao carregar doações:", error);
+                console.warn("Erro ao carregar doações:", error);
             } finally {
                 setLoading(false);
             }
@@ -161,6 +178,41 @@ export default function Doacoes() {
 
     const doacoesFiltradas =
         filtro === "Todas" ? doacoes : doacoes.filter(d => d.status === filtro);
+
+    // [ALTERAR STATUS PARA CONCLUÍDO]
+    const alterarStatus = async (id: number) => {
+        let bodyRequestAgendamento: any = {
+            status: "Concluido"
+        };
+
+        try {
+            const response = await api.put(`/Agendamento/${id}`, bodyRequestAgendamento);
+
+            if (response.status === 200) {
+                Alert.alert("Doação confirmada com sucesso!");
+                return;
+            }
+
+        } catch (error: any) {
+            console.log(error);
+
+            let msg = "Não foi possível alterar a situação para finalizado!";
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
+            }
+
+            if (msg !== "O agendamento já está concluído!") {
+                console.warn(msg);
+            }
+        }
+    }
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -242,7 +294,14 @@ export default function Doacoes() {
                                     </View>
                                 ) : (
                                     doacoesFiltradas.map((d) => (
-                                        <CardDoacao key={d.id} doacao={d} />
+                                        <CardDoacao key={d.id} doacao={d} onPress={(id) => {
+                                            if (usuario.tipoUsuario === "Ong") {
+                                                alterarStatus(id);
+                                                setTimeout(() => {
+                                                    router.replace('/doacoes');
+                                                }, 500);
+                                            }
+                                        }} />
                                     ))
                                 )}
                             </View>
