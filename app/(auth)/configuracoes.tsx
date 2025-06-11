@@ -1,10 +1,10 @@
 import BottomNavigation from "@/components/bottomNavigation";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import PhotoPickerModal from "@/components/PhotoPickerModal";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome6 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import * as ImagePicker from 'expo-image-picker';
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
@@ -18,6 +18,28 @@ export default function Configuracoes() {
     const [isPhotoModalVisible, setPhotoModalVisible] = useState(false);
     const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
 
+    // [SETAR FOTO]
+    const [isUploading, setIsUploading] = useState(false);
+    const handlePhotoSelected = async (uri: string) => {
+        console.log("URI recebida na Home:", uri);
+        setNovaFotoUri(uri); // Mostra a preview da imagem imediatamente
+
+        // Aqui entraria a lógica de upload que discutimos
+        setIsUploading(true);
+        try {
+            // Exemplo: await uploadImageAsync(uri);
+            // Após o upload, você atualizaria o 'usuario' no seu AuthContext
+            console.log("Simulando upload...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log("Upload finalizado!");
+        } catch (error) {
+            console.error("Erro no upload:", error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+
     const toggleModal = () => setModalVisible(!isModalVisible);
     const togglePhotoModal = () => setPhotoModalVisible(!isPhotoModalVisible);
 
@@ -25,54 +47,6 @@ export default function Configuracoes() {
         setModalVisible(false);
         logout();
     };
-
-    const takePhotoWithCamera = async () => {
-        // 1. Pedir permissão para a CÂMERA
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Desculpe, precisamos da permissão da câmera para isso funcionar!');
-            return;
-        }
-
-        // 2. Abrir a câmera
-        let result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        // 3. Lidar com o resultado
-        if (!result.canceled) {
-            setNovaFotoUri(result.assets[0].uri);
-            togglePhotoModal(); // Fecha o modal
-        }
-    };
-
-    const pickImageFromGallery = async () => {
-        // 1. Pedir permissão para acessar a galeria
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Desculpe, precisamos da permissão da galeria para isso funcionar!');
-            return;
-        }
-
-        // 2. Abrir a galeria de imagens
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images, // Apenas imagens
-            allowsEditing: true, // Permite ao usuário cortar a imagem
-            aspect: [1, 1], // Força o corte para uma proporção quadrada
-            quality: 1, // Qualidade máxima
-        });
-
-        // 3. Lidar com o resultado
-        if (!result.canceled) {
-            // Por enquanto, vamos apenas mostrar a URI (o caminho local) da imagem no console
-            setNovaFotoUri(result.assets[0].uri);
-            togglePhotoModal(); // Fecha o modal após selecionar
-        }
-    };
-
-    // ...
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -110,28 +84,35 @@ export default function Configuracoes() {
                                     <View style={styles.ProfileContent}>
                                         <View style={styles.ProfileLeft}>
 
-                                            <TouchableOpacity style={styles.ProfileIcon} onPress={togglePhotoModal}>
-                                                {/* Se existe uma nova URI OU o usuário já tem uma foto, mostre a imagem */}
-                                                {novaFotoUri || usuario?.fotoUrl ? (
-                                                    <Image
-                                                        source={{ uri: novaFotoUri || usuario?.fotoUrl }}
-                                                        style={styles.profileImage}
-                                                    />
-                                                ) : (
-                                                    // Senão, mostre o ícone padrão
-                                                    <Feather name="user" size={25} color={Colors.WHITE} />
-                                                )}
 
-                                                {/* Ícone de edição sobreposto */}
+
+                                            <View style={styles.profileImageContainer}>
+
+                                                {/* O TouchableOpacity agora só contém a imagem ou o ícone padrão */}
+                                                <TouchableOpacity style={styles.Img} onPress={togglePhotoModal}>
+                                                    {novaFotoUri || usuario?.fotoUrl ? (
+                                                        <Image
+                                                            source={{ uri: novaFotoUri || usuario?.fotoUrl }}
+                                                            style={styles.profileImage}
+                                                            resizeMode="cover"
+                                                        />
+                                                    ) : (
+                                                        <FontAwesome6 name="user-large" size={15} color={Colors.WHITE} />
+                                                    )}
+                                                </TouchableOpacity>
+
+                                                {/* --- PASSO 2: Mova o ícone para fora, como irmão do TouchableOpacity --- */}
                                                 <View style={styles.editIconOverlay}>
                                                     <Feather name="edit-2" size={12} color={Colors.WHITE} />
                                                 </View>
-                                            </TouchableOpacity>
+
+                                            </View>
 
                                             <View>
                                                 <Text style={styles.ProfileName}>{usuario?.nome || "Usuário"}</Text>
                                                 <Text style={styles.ProfileEmail}>{usuario?.email || "Email"}</Text>
                                             </View>
+
                                         </View>
 
                                     </View>
@@ -184,29 +165,11 @@ export default function Configuracoes() {
                 </Modal>
 
                 {/* Modal para alterar a foto de perfil */}
-                <Modal
+                <PhotoPickerModal
                     isVisible={isPhotoModalVisible}
-                    onBackdropPress={togglePhotoModal} // Fecha o modal ao tocar fora
-                    style={styles.bottomModal}
-                >
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
-
-                        <TouchableOpacity style={styles.modalButton} onPress={takePhotoWithCamera}>
-                            <Feather name="camera" size={20} color={Colors.ORANGE} />
-                            <Text style={styles.modalButtonText}>Tirar Foto</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.modalButton} onPress={pickImageFromGallery}>
-                            <Feather name="image" size={20} color={Colors.ORANGE} />
-                            <Text style={styles.modalButtonText}>Escolher da Galeria</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.modalButton]} onPress={togglePhotoModal}>
-                            <Text style={[styles.modalButtonText, { color: Colors.GRAY }]}>Cancelar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
+                    onClose={togglePhotoModal}
+                    onPhotoSelected={handlePhotoSelected}
+                />
 
             </SafeAreaView>
         </PrivateRoute>
@@ -326,22 +289,38 @@ const styles = StyleSheet.create({
     ProfileContent: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "flex-end",
     },
     ProfileLeft: {
+        display: "flex",
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
     },
-    // ... no seu objeto de estilos
-    ProfileIcon: {
+    DivPerfil: {
+        // backgroundColor: "#fff",
+        width: "15%",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center"
+    },
+
+    profileImageContainer: {
+        // Não precisa de muito, ele serve como referência para a posição do ícone.
+        // Pode-se definir width e height se necessário, mas vamos começar simples.
+        position: 'relative', // Padrão, mas bom deixar explícito para clareza
+    },
+    Img: {
         backgroundColor: Colors.ORANGE,
         width: 50,
         height: 50,
-        borderRadius: 25,
+        borderRadius: 30,
+        display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        // Remova borderWidth e borderColor se você os tiver, a imagem cuidará da borda.
+        borderWidth: 2,
+        borderColor: Colors.ORANGE,
+        overflow: 'hidden'
     },
     profileImage: {
         width: 50,
