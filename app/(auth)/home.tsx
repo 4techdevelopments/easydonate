@@ -1,10 +1,13 @@
 import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
+import Colors from "@/components/Colors";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import OngCard from "@/components/ongCard";
+import PhotoPickerModal from "@/components/PhotoPickerModal";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Ong } from "@/types/Ong";
+import { Feather } from "@expo/vector-icons";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,9 +15,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Colors from "../../components/Colors";
+
 
 export default function Home() {
   const { usuario } = useAuth();
@@ -28,6 +31,34 @@ export default function Home() {
   // [ONGS]
   const [ongs, setOngs] = useState<Ong[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // [MODAL FOTO DE PERFIL]
+  const [isPhotoModalVisible, setPhotoModalVisible] = useState(false);
+  const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
+  // Opcional: para mostrar um feedback de loading durante o upload
+  const [isUploading, setIsUploading] = useState(false);
+
+  const togglePhotoModal = () => setPhotoModalVisible(!isPhotoModalVisible);
+
+  const handlePhotoSelected = async (uri: string) => {
+    console.log("URI recebida na Home:", uri);
+    setNovaFotoUri(uri); // Mostra a preview da imagem imediatamente
+
+    // Aqui entraria a lógica de upload que discutimos
+    setIsUploading(true);
+    try {
+      // Exemplo: await uploadImageAsync(uri);
+      // Após o upload, você atualizaria o 'usuario' no seu AuthContext
+      console.log("Simulando upload...");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("Upload finalizado!");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
 
   // [BUSCAR ONGS]
   const fetchOngs = async () => {
@@ -76,6 +107,8 @@ export default function Home() {
     )
   }
 
+  
+
   return (
     <PrivateRoute>
       <SafeAreaView style={{ flex: 1 }}>
@@ -90,11 +123,27 @@ export default function Home() {
                   <Text style={styles.TextNome}>{usuario?.nome || "Usuário"}</Text>
                   <Text style={styles.Text}>!</Text>
                 </View>
-                <View style={styles.DivPerfil}>
-                  <Pressable style={styles.Img}>
-                    <FontAwesome6 name="user-large" size={15} color={Colors.ORANGE} />
-                  </Pressable>
-                </View>
+                <View style={styles.profileImageContainer}>
+
+                                                {/* O TouchableOpacity agora só contém a imagem ou o ícone padrão */}
+                                                <TouchableOpacity style={styles.Img} onPress={togglePhotoModal}>
+                                                    {novaFotoUri || usuario?.fotoUrl ? (
+                                                        <Image
+                                                            source={{ uri: novaFotoUri || usuario?.fotoUrl }}
+                                                            style={styles.profileImage}
+                                                            resizeMode="cover"
+                                                        />
+                                                    ) : (
+                                                        <FontAwesome6 name="user-large" size={15} color={Colors.WHITE} />
+                                                    )}
+                                                </TouchableOpacity>
+
+                                                {/* --- PASSO 2: Mova o ícone para fora, como irmão do TouchableOpacity --- */}
+                                                <View style={styles.editIconOverlay}>
+                                                    <Feather name="edit-2" size={12} color={Colors.WHITE} />
+                                                </View>
+
+                                            </View>
               </View>
             </View>
             <ScrollView horizontal={false} showsVerticalScrollIndicator={false} style={styles.ScrollAll}>
@@ -173,6 +222,11 @@ export default function Home() {
           </View>
 
         </View>
+        <PhotoPickerModal 
+          isVisible={isPhotoModalVisible}
+          onClose={togglePhotoModal}
+          onPhotoSelected={handlePhotoSelected}
+        />
       </SafeAreaView>
     </PrivateRoute>
   );
@@ -186,6 +240,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: Colors.BG
   },
+  profileImageContainer: {
+        // Não precisa de muito, ele serve como referência para a posição do ícone.
+        // Pode-se definir width e height se necessário, mas vamos começar simples.
+        position: 'relative', // Padrão, mas bom deixar explícito para clareza
+    },
+   profileImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+    },
+    editIconOverlay: {
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            backgroundColor: Colors.ORANGE,
+            borderRadius: 10,
+            padding: 3,
+            borderWidth: 1,
+            borderColor: Colors.WHITE,
+        },
   Wrapper: {
     width: "80%",
     height: "100%"
@@ -195,6 +269,7 @@ const styles = StyleSheet.create({
   },
   Header: {
     //backgroundColor: "#0f0",
+    marginTop: 15,
     width: "100%",
     height: "7%",
     display: "flex",
@@ -224,22 +299,23 @@ const styles = StyleSheet.create({
     color: Colors.ORANGE
   },
   DivPerfil: {
-    //backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     width: "15%",
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "center"
   },
   Img: {
-    backgroundColor: Colors.BG,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: Colors.ORANGE,
+    width: 42.5,
+    height: 42.5,
+    borderRadius: 30,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: Colors.ORANGE
+    borderColor: Colors.ORANGE,
+    overflow: 'hidden'
   },
   Section: {
     //backgroundColor: "#ff0",
