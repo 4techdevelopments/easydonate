@@ -2,11 +2,12 @@ import api from "@/api/axios";
 import Dropdown from "@/components/dropdown";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import RadioSelector from "@/components/radioGroup";
-import { Entypo } from '@expo/vector-icons';
+import { Entypo, FontAwesome } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
@@ -44,6 +45,11 @@ export default function Cadastro() {
     const [nomeDoador, setNomeDoador] = useState('');
     const [nomeSocial, setNomeSocial] = useState('');
     const [cpf, setCpf] = useState('');
+    const [cnpjDoador, setCnpjDoador] = useState('');
+    const [dataNascimento, setDataNascimento] = useState('');
+    const [dataNascimentoISO, setDataNascimentoISO] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [cepDoador, setCepDoador] = useState('');
     const [ruaDoador, setRuaDoador] = useState('');
     const [numeroDoador, setNumeroDoador] = useState('');
@@ -76,6 +82,27 @@ export default function Cadastro() {
     const [tipoUsuario, setTipoUsuario] = useState<string>('');
     // [OPCAO SELECIONADA]
     const [selectedOption, setSelectedOption] = useState<string>('');
+
+    // [DATE TIME]
+    const formatDateToDisplay = (date: Date): string => {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    const formatDateToISO = (date: Date): string => {
+        return date.toISOString().split('T')[0];
+    };
+
+    const handleDateChange = (event: any, date?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (date) {
+            setSelectedDate(date);
+            setDataNascimento(formatDateToDisplay(date));
+            setDataNascimentoISO(formatDateToISO(date));
+        }
+    };
 
     // [TIPO USUARIO]
     useEffect(() => {
@@ -288,7 +315,7 @@ export default function Cadastro() {
 
     // [CADASTRO DOADOR]
     const cadastroDoador = async () => {
-        if (!emailDoador || !tipoUsuario || !nomeDoador || !tipoPessoa || !cpf || !cepDoador || !ruaDoador || !bairroDoador || !cidadeDoador || !estadoDoador || !dddDoador || !numeroTelDoador || !senhaDoador || !senhaDoador2) {
+        if (!emailDoador || !tipoUsuario || !nomeDoador || !tipoPessoa || !dataNascimento || !cepDoador || !ruaDoador || !bairroDoador || !cidadeDoador || !estadoDoador || !dddDoador || !numeroTelDoador || !senhaDoador || !senhaDoador2) {
             // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
             mostrarModalErro("Preencha todos os campos obrigatórios!");
             return;
@@ -300,11 +327,20 @@ export default function Cadastro() {
             return;
         }
 
-        const cpfRegex = /^\d{11}$/;
-        if (!cpfRegex.test(cpf)) {
-            mostrarModalErro("Digite o cpf corretamente!");
-            // Alert.alert("Erro", "Digite o cpf corretamente!");
-            return;
+        if (tipoPessoa === "PF") {
+            const cpfRegex = /^\d{11}$/;
+            if (!cpfRegex.test(cpf)) {
+                mostrarModalErro("Digite o cpf corretamente!");
+                return;
+            }
+        }
+
+        if (tipoPessoa === "PJ") {
+            const cnpjRegex = /^(?:\d{14}|[A-Za-z0-9]{8}\d{6})$/;
+            if (!cnpjRegex.test(cnpjDoador)) {
+                mostrarModalErro("Digite o cnpj corretamente!");
+                return;
+            }
         }
 
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -335,6 +371,8 @@ export default function Cadastro() {
             nome: nomeDoador,
             nomeSocial,
             cpf,
+            cnpj: cnpjDoador,
+            dataNascimento: dataNascimentoISO,
             cep: cepDoador,
             rua: ruaDoador,
             numero: numeroDoador.trim(),
@@ -486,17 +524,59 @@ export default function Cadastro() {
                                                 style={styles.Input}
                                             />
                                         </View>
-                                        <Text style={styles.Labels}>CPF*</Text>
+
+                                        {tipoPessoa === "PF" && (
+                                            <View style={styles.DivCadastro}>
+                                                <Text style={styles.Labels}>CPF*</Text>
+                                                <TextInput
+                                                    placeholder="000.000.000-00"
+                                                    maxLength={11}
+                                                    value={cpf}
+                                                    onChangeText={setCpf}
+                                                    keyboardType="number-pad"
+                                                    style={styles.Input}
+                                                />
+                                            </View>
+                                        )}
+
+                                        {tipoPessoa === "PJ" && (
+                                            <View style={styles.DivCadastro}>
+                                                <Text style={styles.Labels}>CNPJ*</Text>
+                                                <TextInput
+                                                    placeholder="00.000.000/0000-00"
+                                                    maxLength={14}
+                                                    value={cnpjDoador}
+                                                    onChangeText={setCnpjDoador}
+                                                    keyboardType="number-pad"
+                                                    style={styles.Input}
+                                                />
+                                            </View>
+                                        )}
+
                                         <View style={styles.DivCadastro}>
+                                            <Text style={styles.Labels}>Data Nascimento*</Text>
                                             <TextInput
-                                                placeholder="000.000.000-00"
-                                                maxLength={11}
-                                                value={cpf}
-                                                onChangeText={setCpf}
-                                                keyboardType="number-pad"
+                                                placeholder="00/00/0000"
+                                                maxLength={10}
+                                                value={dataNascimento}
+                                                editable={false}
                                                 style={styles.Input}
                                             />
+                                            <Pressable onPress={() => setShowDatePicker(true)} style={{ position: "absolute", bottom: 12, right: 15 }}>
+                                                <FontAwesome name="calendar" size={22} color={Colors.ORANGE} />
+                                            </Pressable>
+
+                                            {showDatePicker && (
+                                                <DateTimePicker
+                                                    value={selectedDate || new Date(2000, 0, 1)}
+                                                    mode="date"
+                                                    display="default"
+                                                    maximumDate={new Date()}
+                                                    onChange={handleDateChange}
+                                                />
+                                            )}
                                         </View>
+
                                         <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>CEP*</Text>
                                             <TextInput
@@ -610,6 +690,7 @@ export default function Cadastro() {
                                                 keyboardType="email-address"
                                                 textContentType="emailAddress"
                                                 autoComplete="email"
+                                                autoCapitalize="none"
                                                 style={styles.Input}
                                             />
                                         </View>
@@ -817,6 +898,7 @@ export default function Cadastro() {
                                                 keyboardType="email-address"
                                                 textContentType="emailAddress"
                                                 autoComplete="email"
+                                                autoCapitalize="none"
                                                 style={styles.Input}
                                             />
                                         </View>
