@@ -34,7 +34,6 @@ export default function Index() {
 
       router.replace("/inicio");
     };
-
     verificarAutenticacao();
   }, []);
 
@@ -46,7 +45,7 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  Container: {
+  Container: { 
     flex: 1,
     display: "flex",
     alignItems: "center",

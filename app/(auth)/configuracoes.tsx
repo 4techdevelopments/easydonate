@@ -1,5 +1,6 @@
 import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
+import Colors from "@/components/Colors";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import PhotoPickerModal from "@/components/PhotoPickerModal";
 import { useAuth } from "@/routes/AuthContext";
@@ -11,7 +12,6 @@ import React, { useCallback, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Colors from "../../components/Colors";
 
 export default function Configuracoes() {
     const { usuario, logout, atualizarUsuario } = useAuth();
@@ -164,7 +164,7 @@ export default function Configuracoes() {
 
                                                 {/* --- PASSO 2: Mova o ícone para fora, como irmão do TouchableOpacity --- */}
                                                 <View style={styles.editIconOverlay}>
-                                                    <Feather name="edit-2" size={12} color={Colors.WHITE} />
+                                                    <FontAwesome6 name="camera" size={12} color={Colors.WHITE} />
                                                 </View>
 
                                             </View>
@@ -190,7 +190,7 @@ export default function Configuracoes() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity style={styles.Item} onPress={toggleModal}>
-                                    <View style={styles.ItemLeft}>
+                                    <View style={styles.ItemLeft}> 
                                         <Feather name="log-out" size={20} color={Colors.ORANGE} />
                                         <Text style={[styles.ItemText, { color: Colors.ORANGE }]}>Sair</Text>
                                     </View>
@@ -379,8 +379,8 @@ const styles = StyleSheet.create({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        borderWidth: 2,
-        borderColor: Colors.ORANGE,
+        // borderWidth: 1,
+        // borderColor: Colors.ORANGE,
         overflow: 'hidden'
     },
     profileImage: {
@@ -390,13 +390,11 @@ const styles = StyleSheet.create({
     },
     editIconOverlay: {
         position: 'absolute',
-        bottom: 0,
-        right: 0,
+        bottom: -3,
+        right: -3,
         backgroundColor: Colors.ORANGE,
-        borderRadius: 10,
-        padding: 3,
-        borderWidth: 1,
-        borderColor: Colors.WHITE,
+        borderRadius: 15,
+        padding: 5,
     },
     // ...
     ProfileName: {

@@ -74,6 +74,11 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
                     <Text style={styles.modalButtonText}>Galeria</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity style={[styles.modalButton]} onPress={onClose}>
+                    <Feather name="trash-2" size={20} color={Colors.ORANGE} />
+                    <Text style={styles.modalButtonText}>Excluir</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={[styles.modalButton, {backgroundColor: Colors.ORANGE, borderRadius: 30}]} onPress={onClose}>
                     <Text style={[styles.modalButtonText, { color: Colors.WHITE }]}>Cancelar</Text>
                 </TouchableOpacity>
