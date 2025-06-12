@@ -1,3 +1,4 @@
+import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import PhotoPickerModal from "@/components/PhotoPickerModal";
@@ -5,39 +6,99 @@ import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Feather, FontAwesome6 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Configuracoes() {
-    const { usuario, logout } = useAuth();
+    const { usuario, logout, atualizarUsuario } = useAuth();
     const [isModalVisible, setModalVisible] = useState(false);
     const [isPhotoModalVisible, setPhotoModalVisible] = useState(false);
     const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
 
+    // [UPLOAD IMAGEM IMAGEBB]
+    const uploadToImgbb = async (imageUri: string): Promise<string | null> => {
+        try {
+            const apiKey = "0064c7ca5d35d2ff095d09220c71f750";
+
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result?.toString().split(",")[1] || "");
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            const formData = new FormData();
+            formData.append("image", base64);
+
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await res.json();
+            return data.data?.url || null;
+        } catch (error) {
+            console.warn("Erro ao enviar imagem para ImgBB:", error);
+            return null;
+        }
+    };
+
     // [SETAR FOTO]
     const [isUploading, setIsUploading] = useState(false);
     const handlePhotoSelected = async (uri: string) => {
-        console.log("URI recebida na Home:", uri);
+        //console.log("URI recebida na Home:", uri);
         setNovaFotoUri(uri); // Mostra a preview da imagem imediatamente
 
         // Aqui entraria a lógica de upload que discutimos
         setIsUploading(true);
         try {
-            // Exemplo: await uploadImageAsync(uri);
-            // Após o upload, você atualizaria o 'usuario' no seu AuthContext
-            console.log("Simulando upload...");
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log("Upload finalizado!");
+            const uploadedUrl = await uploadToImgbb(uri);
+
+            if (uploadedUrl) {
+                //console.log("URL da imagem no ImgBB:", uploadedUrl);
+
+                const response = await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
+                    idUsuario: usuario.idUsuario,
+                    avatar: uploadedUrl
+                });
+
+                if (response.status === 200) {
+                    //console.log(response.data);
+                    await fetchUsuarioAtualizado();
+                }
+
+                atualizarUsuario({ avatar: uploadedUrl });
+            }
         } catch (error) {
-            console.error("Erro no upload:", error);
+            console.warn("Erro no upload:", error);
         } finally {
             setIsUploading(false);
         }
     };
+
+    // [ATUALIZAR AVATAR DO USUARIO]
+    const fetchUsuarioAtualizado = async () => {
+        try {
+            const response = await api.get(`/Usuario/${usuario.idUsuario}`);
+            if (response.status === 200) {
+                atualizarUsuario({ avatar: response.data.avatar });
+            }
+        } catch (error) {
+            console.warn("Erro ao buscar dados atualizados do usuário:", error);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchUsuarioAtualizado();
+        }, [])
+    );
 
 
     const toggleModal = () => setModalVisible(!isModalVisible);
@@ -90,9 +151,9 @@ export default function Configuracoes() {
 
                                                 {/* O TouchableOpacity agora só contém a imagem ou o ícone padrão */}
                                                 <TouchableOpacity style={styles.Img} onPress={togglePhotoModal}>
-                                                    {novaFotoUri || usuario?.fotoUrl ? (
+                                                    {novaFotoUri || usuario?.avatar ? (
                                                         <Image
-                                                            source={{ uri: novaFotoUri || usuario?.fotoUrl }}
+                                                            source={{ uri: novaFotoUri || usuario?.avatar }}
                                                             style={styles.profileImage}
                                                             resizeMode="cover"
                                                         />
