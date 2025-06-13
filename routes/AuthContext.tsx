@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         SecureStore.setItemAsync("usuario", JSON.stringify(usuario));
         setIsAuthenticated(true);
         setUsuario(usuario);
-        router.replace("/home");
+        // router.replace("/home");
     };
 
     const logout = async () => {

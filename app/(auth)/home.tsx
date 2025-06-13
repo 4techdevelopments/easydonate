@@ -1,20 +1,19 @@
 import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import Colors from "@/components/Colors";
+import { DisplayAvatar } from '@/components/DisplayAvatar';
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import OngCard from "@/components/ongCard";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Ong } from "@/types/Ong";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
@@ -30,40 +29,6 @@ export default function Home() {
   // [ONGS]
   const [ongs, setOngs] = useState<Ong[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
-  // [PUXAR FOTO]
-  const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
-
-  // [ATUALIZAR AVATAR DO USUARIO]
-  const [naoTemAvatar, setNaoTemAvatar] = useState(false);
-
-  const fetchUsuarioAtualizado = async () => {
-    try {
-
-      if (!usuario || !usuario.idUsuario || usuario.avatar || naoTemAvatar) return;
-
-      const response = await api.get(`/Usuario/${usuario.idUsuario}`);
-
-      if (response.data.avatar === null) {
-        setNaoTemAvatar(true);
-        return;
-      }
-
-      if (response.status === 200) {
-        atualizarUsuario({ avatar: response.data.avatar });
-      }
-    } catch (error) {
-      console.warn("Erro ao buscar dados atualizados do usuário:", error);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      if (usuario && usuario.idUsuario && !usuario.avatar && !naoTemAvatar) {
-        fetchUsuarioAtualizado();
-      }
-    }, [usuario, naoTemAvatar])
-  );
 
   // [BUSCAR ONGS]
   const fetchOngs = async () => {
@@ -129,20 +94,7 @@ export default function Home() {
                   <Text style={styles.Text}>!</Text>
                 </View>
                 <View style={styles.profileImageContainer}>
-
-                  {/* O TouchableOpacity agora só contém a imagem ou o ícone padrão */}
-                  <TouchableOpacity style={styles.Img}>
-                    {usuario?.avatar ? (
-                      <Image
-                        source={{ uri: novaFotoUri || usuario?.avatar }}
-                        style={styles.profileImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <FontAwesome6 name="user-large" size={15} color={Colors.WHITE} />
-                    )}
-                  </TouchableOpacity>
-
+                  <DisplayAvatar />
                 </View>
               </View>
             </View>
@@ -308,8 +260,8 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: Colors.ORANGE,
+    // borderWidth: 2,
+    // borderColor: Colors.ORANGE,
     overflow: 'hidden'
   },
   Section: {

@@ -1,11 +1,11 @@
 import api from "@/api/axios";
+import { AvatarUploader } from '@/components/AvatarUploader';
 import BottomNavigation from "@/components/bottomNavigation";
 import Colors from "@/components/Colors";
 import EasyDonateSvg from "@/components/easyDonateSvg";
-import PhotoPickerModal from "@/components/PhotoPickerModal";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
-import { Feather, FontAwesome6 } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -147,27 +147,8 @@ export default function Configuracoes() {
 
 
 
-                                            <View style={styles.profileImageContainer}>
-
-                                                {/* O TouchableOpacity agora só contém a imagem ou o ícone padrão */}
-                                                <TouchableOpacity style={styles.Img} onPress={togglePhotoModal}>
-                                                    {novaFotoUri || usuario?.avatar ? (
-                                                        <Image
-                                                            source={{ uri: novaFotoUri || usuario?.avatar }}
-                                                            style={styles.profileImage}
-                                                            resizeMode="cover"
-                                                        />
-                                                    ) : (
-                                                        <FontAwesome6 name="user-large" size={15} color={Colors.WHITE} />
-                                                    )}
-                                                </TouchableOpacity>
-
-                                                {/* --- PASSO 2: Mova o ícone para fora, como irmão do TouchableOpacity --- */}
-                                                <View style={styles.editIconOverlay}>
-                                                    <FontAwesome6 name="camera" size={12} color={Colors.WHITE} />
-                                                </View>
-
-                                            </View>
+                                            <AvatarUploader />
+                                            
 
                                             <View>
                                                 <Text style={styles.ProfileName}>{usuario?.nome || "Usuário"}</Text>
@@ -225,12 +206,7 @@ export default function Configuracoes() {
                     </View>
                 </Modal>
 
-                {/* Modal para alterar a foto de perfil */}
-                <PhotoPickerModal
-                    isVisible={isPhotoModalVisible}
-                    onClose={togglePhotoModal}
-                    onPhotoSelected={handlePhotoSelected}
-                />
+                
 
             </SafeAreaView>
         </PrivateRoute>

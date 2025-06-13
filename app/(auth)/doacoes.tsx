@@ -1,5 +1,6 @@
 import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
+import { DisplayAvatar } from "@/components/DisplayAvatar";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
@@ -21,7 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
-const router = useRouter();
+// const router = useRouter();
 
 const filtros = ["Todas", "Pendentes", "Em andamento", "Concluídas"] as const;
 
@@ -104,6 +105,7 @@ function CardDoacao({ doacao, onPress }: { doacao: Doacao, onPress: (id: number)
 
 export default function Doacoes() {
     const { usuario } = useAuth();
+    const router = useRouter();
 
     const [filtro, setFiltro] = useState<FiltroStatus>("Todas");
     const scrollRef = useRef<ScrollView>(null);
@@ -240,9 +242,7 @@ export default function Doacoes() {
 
                                 </View>
                                 <View style={styles.DivPerfil}>
-                                    <View style={styles.Img}>
-                                        <FontAwesome6 name="user-large" size={15} color={Colors.ORANGE} />
-                                    </View>
+                                    <DisplayAvatar />
                                 </View>
                             </View>
                         </View>
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     Container: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.BG },
     Wrapper: { width: "80%", height: "100%" },
     ScrollAll: { width: "100%" },
-    Header: { width: "100%", height: "7%", justifyContent: "flex-end" },
+    Header: { width: "100%", height: "7%", justifyContent: "flex-end", marginTop: 15, },
     WrapperTitulo: { width: "100%", height: "90%", flexDirection: "row" },
     DivOla: { width: "85%", justifyContent: "center" },
     Text: { fontFamily: "Montserrat", fontSize: 18 },
