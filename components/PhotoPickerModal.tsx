@@ -1,21 +1,21 @@
-// src/components/PhotoPickerModal.tsx (CORRIGIDO)
-
 import Colors from "@/components/Colors";
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker'; // Import necessário
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // Import do Alert
 import Modal from 'react-native-modal';
-
 
 interface PhotoPickerModalProps {
     isVisible: boolean;
     onClose: () => void;
     onPhotoSelected: (uri: string) => void;
+    onDelete: () => void;
 }
 
-const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose, onPhotoSelected }) => {
+const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose, onPhotoSelected, onDelete }) => {
 
+    // --- LÓGICA DA CÂMERA RESTAURADA ---
     const takePhotoWithCamera = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
@@ -31,10 +31,11 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
 
         if (!result.canceled) {
             onPhotoSelected(result.assets[0].uri);
-            onClose(); // Fecha o modal
+            onClose(); // Fecha o modal após a seleção
         }
     };
 
+    // --- LÓGICA DA GALERIA RESTAURADA ---
     const pickImageFromGallery = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -43,7 +44,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
         }
 
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -51,7 +52,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
 
         if (!result.canceled) {
             onPhotoSelected(result.assets[0].uri);
-            onClose(); // Fecha o modal
+            onClose(); // Fecha o modal após a seleção
         }
     };
 
@@ -64,29 +65,35 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
 
-                <TouchableOpacity style={[styles.modalButton]} onPress={takePhotoWithCamera}>
+                <TouchableOpacity style={styles.modalButton} onPress={takePhotoWithCamera}>
                     <Feather name="camera" size={20} color={Colors.ORANGE} />
-                    <Text style={[styles.modalButtonText, {color: Colors.BLACK}]}>Câmera</Text>
+                    <Text style={[styles.modalButtonText, { color: Colors.BLACK }]}>Câmera</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.modalButton]} onPress={pickImageFromGallery}>
+                <TouchableOpacity style={styles.modalButton} onPress={pickImageFromGallery}>
                     <Feather name="image" size={20} color={Colors.ORANGE} />
                     <Text style={styles.modalButtonText}>Galeria</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.modalButton]} onPress={onClose}>
-                    <Feather name="trash-2" size={20} color={Colors.ORANGE} />
-                    <Text style={styles.modalButtonText}>Excluir</Text>
+                <TouchableOpacity style={{ width: '100%' }} onPress={onDelete}>
+                    <LinearGradient
+                        {...Colors.SUNSET_GRADIENT}
+                        style={styles.baseButton}
+                    >
+                        <Feather name="trash-2" size={20} color={Colors.WHITE} />
+                        <Text style={[styles.modalButtonText, { color: Colors.WHITE }]}>Excluir</Text>
+                    </LinearGradient>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.modalButton, {backgroundColor: Colors.ORANGE, borderRadius: 30}]} onPress={onClose}>
-                    <Text style={[styles.modalButtonText, { color: Colors.WHITE }]}>Cancelar</Text>
+                <TouchableOpacity style={[styles.modalButton]} onPress={onClose}>
+                    <Text style={[styles.modalButtonText, { color: Colors.BLACK }]}>Cancelar</Text>
                 </TouchableOpacity>
             </View>
         </Modal>
     );
 };
 
+// ... (seus estilos continuam os mesmos)
 const styles = StyleSheet.create({
     bottomModal: {
         justifyContent: 'flex-end',
@@ -94,15 +101,26 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: 'white',
-        padding: 22,
+        paddingHorizontal: 22,
+        paddingTop: 22,
+        paddingBottom: 10,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         alignItems: 'center',
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: "Montserrat-Bold",
         marginBottom: 20,
+    },
+    baseButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        width: '100%',
+        justifyContent: 'center',
+        borderRadius: 30,
+        marginBottom: 15,
     },
     modalButton: {
         flexDirection: 'row',
@@ -110,16 +128,15 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         width: '100%',
         justifyContent: 'center',
-        backgroundColor: Colors.INPUT_GRAY,
         borderRadius: 30,
-        marginBottom: 15
+        marginBottom: 15,
+        backgroundColor: Colors.INPUT_GRAY,
     },
-
     modalButtonText: {
         marginLeft: 10,
         fontSize: 16,
+        fontFamily: "Montserrat",
     },
-   
 });
 
 export default PhotoPickerModal;

@@ -1,58 +1,51 @@
 import api from "@/api/axios";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import { Logar } from "@/constants/constants";
+import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
+import { useAuth } from '@/routes/AuthContext';
 import { Entypo } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
 export default function Login() {
   const router = useRouter();
+
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [modalMensagem, setModalMensagem] = useState('');
-  const [modalSucesso, setModalSucesso] = useState(false);
-  const mostrarModal = (mensagem: string, sucesso: boolean = false) => {
-    setModalMensagem(mensagem);
-    setModalSucesso(sucesso);
-    setModalVisible(true);
-  };
+
+  // [MODAL FEEDBACK]
+  const { mostrarModalFeedback } = useModalFeedback();
 
   // [LOGIN]
-  const handleLogin = async () => {
+const handleLogin = async () => {
     try {
-      const response = await api.post('/Login', { email, senha });
+        const response = await api.post('/Login', { email, senha });
+        const { token, usuario } = response.data;
 
-      const { token, usuario } = response.data;
-
-      await SecureStore.setItemAsync('token', token);
-      await SecureStore.setItemAsync('usuario', JSON.stringify(usuario));
-
-      mostrarModal("Login efetuado com sucesso!", true);
-      setTimeout(() => {
-        setModalVisible(false);
-        router.replace('/home');
-      }, 1500);
+        // Primeiro, mostramos o modal de sucesso.
+        // O modal já fecha sozinho depois de 2.5s (como configuramos no Provider)
+        mostrarModalFeedback("Login efetuado com sucesso!", 'success');
+        
+        // Depois de um pequeno atraso, salvamos os dados e redirecionamos.
+        setTimeout(() => {
+            login(token, usuario); // Agora esta função só salva os dados
+            router.replace('/home'); // E nós redirecionamos aqui
+        }, 2400); // Espera 2.4 segundos
 
     } catch (error: any) {
-      console.log(error);
-
-      let msg = "Erro ao efetuar login.";
-      if (typeof error.response?.data === 'string') {
-        msg = error.response.data;
-      } else if (error.response?.data?.message) {
-        msg = error.response.data.message;
-      }
-
-      mostrarModal(msg, false);
+        // ... (lógica de erro continua a mesma)
+        let msg = "Erro ao efetuar login.";
+        if (typeof error.response?.data === 'string') {
+            msg = error.response.data;
+        }
+        mostrarModalFeedback(msg, 'error');
     }
-  };
+};
 
   // [CARREGAR FONTS]
   const [fontsLoaded] = useFonts({
@@ -166,26 +159,7 @@ export default function Login() {
       </View>
 
       {/* // [MODAL] */}
-      <Modal isVisible={isModalVisible}>
-        <View style={styles.modalStyle}>
-          <Image
-            source={require("../../assets/images/logo-easy-donate-black.webp")}
-            style={styles.ImgEasyDonate}
-            resizeMode="contain"
-          />
-          <Text style={{ fontSize: 16, fontWeight: "bold", color: modalSucesso ? Colors.ORANGE : Colors.ORANGE, marginBottom: 10 }}>
-            {modalSucesso ? "Sucesso, seja bem-vindo(a)!" : "Erro ao efetuar login."}
-          </Text>
-          <Text style={{ fontSize: 14, textAlign: 'center', marginBottom: 15 }}>
-            {modalMensagem}
-          </Text>
-          {!modalSucesso && (
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.btnFechar}>
-              <Text style={styles.btnFecharlText}>Fechar</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </Modal>
+   
 
 
     </SafeAreaView>
