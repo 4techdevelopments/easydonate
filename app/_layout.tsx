@@ -1,21 +1,27 @@
 // app/_layout.tsx
 
-import { ModalFeedbackProvider } from '@/contexts/ModalFeedbackContext'; // 2. E o nosso novo provider de modal
-import { AuthProvider } from '@/routes/AuthContext'; // 1. Importe seu AuthProvider
+import { ModalFeedbackProvider } from '@/contexts/ModalFeedbackContext';
+import { AuthProvider } from '@/routes/AuthContext';
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
-    // 3. O AuthProvider DEVE abraçar tudo. Ele é a fonte de dados do usuário.
+    // 1. Providers globais no topo, uma única vez.
     <AuthProvider>
-      {/* 4. O ModalFeedbackProvider vem em seguida. A ordem entre eles não importa muito nesse caso, mas ambos precisam estar aqui. */}
       <ModalFeedbackProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          {/* Todas as suas telas aqui dentro agora podem usar tanto o useAuth() quanto o useModalFeedback() */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          {/* etc... */}
+          {/* 2. Declaramos os grupos de rotas aqui. */}
+          <Stack.Screen name="(public)" />
+          <Stack.Screen name="(auth)" />
+          
+          {/* O 'index' geralmente é a tela que decide para onde redirecionar 
+            (ex: se o usuário está logado, vai para '(auth)/home', senão para '(public)/inicio'). 
+            Deixá-lo aqui também está correto.
+          */}
+          <Stack.Screen name="index" />
+
         </Stack>
       </ModalFeedbackProvider>
     </AuthProvider>
-  )
+  );
 }

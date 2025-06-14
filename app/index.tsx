@@ -1,55 +1,37 @@
-import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { jwtDecode } from "jwt-decode";
-import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Colors from "../components/Colors";
+// app/index.tsx
 
-type JwtPayload = {
-  exp: number;
-};
+import EasyDonateSvg from '@/components/easyDonateSvg';
+import { useAuth } from '@/routes/AuthContext';
+import { Redirect } from 'expo-router';
+import React from 'react';
+import { View } from 'react-native';
+import Colors from '../components/Colors';
 
 export default function Index() {
+  // 1. Pegamos o estado de autenticação e o estado de carregamento do nosso "gerente"
+  const { isAuthenticated, loading } = useAuth();
 
-  const router = useRouter();
+  // 2. Enquanto o AuthContext está verificando o token no SecureStore,
+  //    mostramos uma tela de carregamento. Isso evita o "flicker" (piscada) na tela.
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.BG }}>
+        <EasyDonateSvg />
+      </View>
+    );
+  }
 
-  useEffect(() => {
-    const verificarAutenticacao = async () => {
-      try {
-        const token = await SecureStore.getItemAsync("token");
+  // 3. Quando o carregamento termina, verificamos o resultado.
+  //    Se o usuário está autenticado, o componente Redirect do Expo Router
+  //    cuida do redirecionamento para a home.
+  if (isAuthenticated) {
+    return <Redirect href="/home" />;
+  }
 
-        if (token) {
-          const decoded: JwtPayload = jwtDecode(token);
-          const agora = Date.now() / 1000;
-
-          if (decoded.exp && decoded.exp > agora) {
-            router.replace("/home");
-            return;
-          }
-        }
-      } catch (err) {
-        console.log("Erro ao verificar token:", err);
-      }
-
-      router.replace("/inicio");
-    };
-    verificarAutenticacao();
-  }, []);
-
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.Container}></View>
-    </SafeAreaView>
-  );
+  // 4. Se não estiver autenticado, redireciona para a tela de início pública.
+  return <Redirect href="/inicio" />;
 }
 
-const styles = StyleSheet.create({
-  Container: { 
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.BG
-  }
-})
+// Não precisamos de nenhum estilo complexo aqui, pois a tela só mostra
+// o loading ou redireciona.
+

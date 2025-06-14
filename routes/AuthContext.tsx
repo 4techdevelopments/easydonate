@@ -1,3 +1,5 @@
+// routes/AuthContext.tsx
+
 import Colors from '@/components/Colors';
 import EasyDonateSvg from '@/components/easyDonateSvg';
 import { useRouter } from 'expo-router';
@@ -13,6 +15,7 @@ type JwtPayload = {
 type AuthContextType = {
     isAuthenticated: boolean;
     usuario: any | null;
+    loading: boolean; // 1. Adicionado a propriedade 'loading' aqui
     login: (token: string, usuario: any) => void;
     logout: () => void;
     atualizarUsuario: (novosDados: any) => void;
@@ -39,8 +42,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setIsAuthenticated(true);
                         setUsuario(JSON.parse(userData));
                     } else {
+                        // Token expirado
                         setIsAuthenticated(false);
                         setUsuario(null);
+                        // Opcional: remover o token expirado
+                        await SecureStore.deleteItemAsync("token");
+                        await SecureStore.deleteItemAsync("usuario");
                     }
                 } catch (err) {
                     console.warn("Erro ao verificar o token", err);
@@ -60,7 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         SecureStore.setItemAsync("usuario", JSON.stringify(usuario));
         setIsAuthenticated(true);
         setUsuario(usuario);
-        // router.replace("/home");
     };
 
     const logout = async () => {
@@ -72,18 +78,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const atualizarUsuario = (novosDados: any) => {
-    // Cria o novo objeto de usuário completo
-    const usuarioAtualizado = {
-        ...usuario,
-        ...novosDados,
+        const usuarioAtualizado = {
+            ...usuario,
+            ...novosDados,
+        };
+        setUsuario(usuarioAtualizado);
+        SecureStore.setItemAsync("usuario", JSON.stringify(usuarioAtualizado));
     };
-
-    // Atualiza o estado do React para a UI refletir a mudança instantaneamente
-    setUsuario(usuarioAtualizado);
-
-    // Salva o novo objeto de usuário no SecureStore para persistir os dados
-    SecureStore.setItemAsync("usuario", JSON.stringify(usuarioAtualizado));
-};
 
     if (loading) {
         return (
@@ -94,7 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, usuario, login, logout, atualizarUsuario }}>
+        // 2. A propriedade 'loading' agora é fornecida para o resto do app
+        <AuthContext.Provider value={{ isAuthenticated, usuario, loading, login, logout, atualizarUsuario }}>
             {children}
         </AuthContext.Provider>
     );

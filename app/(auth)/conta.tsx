@@ -6,13 +6,15 @@ import Colors from '@/components/Colors';
 import { ProfileDataField } from '@/components/ProfileDataField';
 import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
 import { useAuth } from '@/routes/AuthContext';
-import { Feather } from '@expo/vector-icons';
+// --- IMPORTAÇÃO ADICIONADA ---
+import PrivateRoute from '@/routes/PrivateRoute';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ContaScreen() {
+export default function Conta() {
     const router = useRouter();
     const { usuario, atualizarUsuario } = useAuth();
     const { mostrarModalFeedback } = useModalFeedback();
@@ -32,7 +34,6 @@ export default function ContaScreen() {
         };
 
         try {
-            // No seu backend, a rota de DoadorController espera um objeto com idDoador
             await api.put(`/Doador`, { ...dadosParaSalvar, idDoador: usuario.idDoador });
             atualizarUsuario(dadosParaSalvar);
             mostrarModalFeedback('Dados salvos com sucesso!', 'success');
@@ -45,76 +46,61 @@ export default function ContaScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Feather name="arrow-left" size={24} color={Colors.BLACK} />
-                    </TouchableOpacity>
-                    <Feather name="user" size={20} color={Colors.BLACK} />
-
-                    <Text style={styles.headerTitle}>Minha Conta</Text>
-                    <View style={{ width: 25 }} />
-                </View>
-
-                {/* Envolve o conteúdo principal para centralizar e adicionar espaçamento */}
-                <View style={styles.contentWrapper}>
-                    <ScrollView showsVerticalScrollIndicator={false} >
-                        <View style={styles.profileSection}>
-                            <AvatarUploader size={150}/>
-                            <Text style={styles.profileName}>{nome || "Nome do Usuário"}</Text>
-                            <Text style={styles.profileEmail}>{email}</Text>
+        // --- PrivateRoute adicionado aqui ---
+        <PrivateRoute>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                            <Feather name="arrow-left" size={24} color={Colors.BLACK} />
+                        </TouchableOpacity>
+                        <View style={styles.headerTitleContainer}>
+                            <Feather name="user" size={20} color={Colors.BLACK} />
+                            <Text style={styles.headerTitle}>Minha conta</Text>
+                            <View style={{ width: 25 }} /> 
                         </View>
+                    </View>
+                    
+                    <View style={styles.contentWrapper}>
+                        <ScrollView showsVerticalScrollIndicator={false} >
+                            <View style={styles.profileSection}>
+                                <AvatarUploader size={150} />
+                                
+                                <View style={styles.nameContainer}>
+                                    <Text style={styles.profileName}>{nome || "Nome do Usuário"}</Text>
+                                    <MaterialIcons name="verified" size={20} color={Colors.ORANGE} />
+                                </View>
+                                
+                                <Text style={styles.profileEmail}>{email}</Text>
+                            </View>
 
-                        <View style={styles.dataSection}>
-                            <Text style={styles.sectionTitle}>Meus Dados</Text>
+                            <View style={styles.dataSection}>
+                                <ProfileDataField label="Nome Completo" value={nome} onChangeText={setNome} />
+                                <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
+                                <ProfileDataField label="Nome Social" value={nomeSocial} onChangeText={setNomeSocial} />
 
-                            <ProfileDataField label="Nome Completo" value={nome} onChangeText={setNome} />
-                            <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
-                            <ProfileDataField label="Nome Social" value={nomeSocial} onChangeText={setNomeSocial} />
+                                <View style={styles.fieldContainer}>
+                                    <Text style={styles.label}>CPF</Text>
+                                    <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                                </View>
+                            </View>
+                        </ScrollView>
 
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                            <View style={styles.fieldContainer}>
-                                <Text style={styles.label}>CPF</Text>
-                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
-                            </View>
-                        </View>
-
-
-                    </ScrollView>
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSaving}>
-                        {isSaving ? (
-                            <ActivityIndicator color={Colors.WHITE} />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Salvar Alterações</Text>
-                        )}
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSaving}>
+                            {isSaving ? (
+                                <ActivityIndicator color={Colors.WHITE} />
+                            ) : (
+                                <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </PrivateRoute>
     );
 }
 
-// --- ESTILOS OTIMIZADOS PARA LAYOUT CLEAN ---
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -122,37 +108,47 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        paddingHorizontal: 35 // Padding horizontal um pouco menor
+        paddingHorizontal: 35
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: 15, // Espaçamento do topo controlado aqui
+        paddingTop: 15,
         paddingBottom: 10,
     },
     backButton: {
         padding: 5,
     },
+    headerTitleContainer: {
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        flex: 1, 
+        justifyContent: 'center', 
+        gap: 10
+    },
     headerTitle: {
         fontSize: 18,
-        fontFamily: "Montserrat-Bold",
+        fontFamily: "Montserrat",
         color: Colors.BLACK,
     },
-    // Novo container para centralizar o conteúdo da ScrollView
     contentWrapper: {
         flex: 1,
-        justifyContent: 'center', // Centraliza o conteúdo verticalmente
+        // Removido o justifyContent para permitir que o ScrollView cresça
     },
     profileSection: {
         alignItems: 'center',
-        paddingTop: 10, // Espaço menor acima do avatar
-        paddingBottom: 25, // Espaço menor abaixo do email
+        paddingTop: 10,
+        paddingBottom: 25,
+    },
+    nameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: 15,
     },
     profileName: {
         fontSize: 22,
         fontFamily: "Montserrat-Bold",
-        marginTop: 15,
         color: Colors.BLACK,
     },
     profileEmail: {
@@ -162,19 +158,13 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     dataSection: {
-        marginBottom: 10, // Espaço menor antes do botão
-    },
-    sectionTitle: {
-        fontSize: 18, // Título da seção um pouco menor
-        fontFamily: 'Montserrat-Bold',
-        color: Colors.BLACK,
-        marginBottom: 15,
+        marginBottom: 10,
     },
     fieldContainer: {
         marginBottom: 15,
     },
     label: {
-        fontSize: 13, // Label um pouco menor
+        fontSize: 13,
         fontFamily: 'Montserrat',
         color: Colors.TEXT_LIGHT,
         marginBottom: 6,

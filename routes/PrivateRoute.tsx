@@ -1,32 +1,33 @@
-import Colors from '@/components/Colors';
-import EasyDonateSvg from '@/components/easyDonateSvg';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+// routes/PrivateRoute.tsx
+
+import React from 'react';
 import { useAuth } from './AuthContext';
 
+// Este componente não é mais usado para redirecionar.
+// A lógica de redirecionamento agora vive em app/index.tsx e no layout raiz.
+// A principal função do PrivateRoute agora é simplesmente não renderizar
+// as telas privadas se o usuário não estiver autenticado, enquanto o
+// redirecionamento acontece.
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated } = useAuth();
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
+    // 1. Ele ainda pergunta ao "gerente" se o usuário está logado.
+    const { isAuthenticated, loading } = useAuth();
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            router.replace("/inicio");
-        } else {
-            setIsLoading(false);
-        }
-    }, [isAuthenticated, router]);
-
-    if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.BG }}>
-                <EasyDonateSvg />
-            </View>
-        );
+    // 2. Se o AuthContext ainda estiver carregando, não mostramos nada
+    //    para evitar "piscadas" na tela. O index.tsx já está mostrando a tela de loading.
+    if (loading) {
+        return null; 
     }
 
-    return <>{children}</>;
+    // 3. Se estiver autenticado, ele simplesmente renderiza o conteúdo da tela.
+    //    Se não estiver, ele não renderiza nada, e o redirecionamento
+    //    que o `index.tsx` ou o `logout` fazem vai assumir o controle.
+    if (isAuthenticated) {
+        return <>{children}</>;
+    }
+
+    // Se não estiver autenticado, não renderiza nada.
+    return null;
 };
 
 export default PrivateRoute;

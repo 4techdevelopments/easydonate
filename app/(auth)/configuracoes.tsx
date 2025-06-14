@@ -1,113 +1,102 @@
-import api from "@/api/axios";
+// app/(tabs)/configuracoes.tsx
+
 import { AvatarUploader } from '@/components/AvatarUploader';
 import BottomNavigation from "@/components/bottomNavigation";
 import Colors from "@/components/Colors";
 import EasyDonateSvg from "@/components/easyDonateSvg";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function Configuracoes() {
-    const { usuario, logout, atualizarUsuario } = useAuth();
-    const [isModalVisible, setModalVisible] = useState(false);
-    const [isPhotoModalVisible, setPhotoModalVisible] = useState(false);
-    const [novaFotoUri, setNovaFotoUri] = useState<string | null>(null);
-
-    // [UPLOAD IMAGEM IMAGEBB]
-    const uploadToImgbb = async (imageUri: string): Promise<string | null> => {
-        try {
-            const apiKey = "0064c7ca5d35d2ff095d09220c71f750";
-
-            const response = await fetch(imageUri);
-            const blob = await response.blob();
-            const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result?.toString().split(",")[1] || "");
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-
-            const formData = new FormData();
-            formData.append("image", base64);
-
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await res.json();
-            return data.data?.url || null;
-        } catch (error) {
-            console.warn("Erro ao enviar imagem para ImgBB:", error);
-            return null;
-        }
-    };
-
-    // [SETAR FOTO]
-    const [isUploading, setIsUploading] = useState(false);
-    const handlePhotoSelected = async (uri: string) => {
-        //console.log("URI recebida na Home:", uri);
-        setNovaFotoUri(uri); // Mostra a preview da imagem imediatamente
-
-        // Aqui entraria a lógica de upload que discutimos
-        setIsUploading(true);
-        try {
-            const uploadedUrl = await uploadToImgbb(uri);
-
-            if (uploadedUrl) {
-                //console.log("URL da imagem no ImgBB:", uploadedUrl);
-
-                const response = await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
-                    idUsuario: usuario.idUsuario,
-                    avatar: uploadedUrl
-                });
-
-                if (response.status === 200) {
-                    //console.log(response.data);
-                    await fetchUsuarioAtualizado();
-                }
-
-                atualizarUsuario({ avatar: uploadedUrl });
-            }
-        } catch (error) {
-            console.warn("Erro no upload:", error);
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    // [ATUALIZAR AVATAR DO USUARIO]
-    const fetchUsuarioAtualizado = async () => {
-        try {
-            const response = await api.get(`/Usuario/${usuario.idUsuario}`);
-            if (response.status === 200) {
-                atualizarUsuario({ avatar: response.data.avatar });
-            }
-        } catch (error) {
-            console.warn("Erro ao buscar dados atualizados do usuário:", error);
-        }
-    };
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchUsuarioAtualizado();
-        }, [])
+// --- COMPONENTES MEMORIZADOS PARA PERFORMANCE ---
+const ProfileCard = React.memo(function ProfileCard() {
+    const { usuario } = useAuth();
+    return (
+        <View style={styles.ProfileCard}>
+            <View style={styles.ProfileContent}>
+                <View style={styles.ProfileLeft}>
+                    <AvatarUploader />
+                    <View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Text style={styles.ProfileName}>{usuario?.nome || "Usuário"}</Text>
+                            <MaterialIcons name="verified" size={16} color={Colors.ORANGE} />
+                        </View>
+                        <Text style={styles.ProfileEmail}>{usuario?.email || "Email"}</Text>
+                    </View>
+                </View>
+            </View>
+        </View>
     );
+});
 
+const SettingsList = React.memo(function SettingsList({ onLogoutPress }: { onLogoutPress: () => void }) {
+    return (
+        <View style={styles.SettingsList}>
+            <TouchableOpacity style={styles.Item} onPress={() => router.push("/(auth)/conta")}>
+                <View style={styles.ItemLeft}>
+                    <Feather name="user" size={20} color={Colors.ORANGE} />
+                    <Text style={styles.ItemText}>Minha conta</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={Colors.GRAY} />
+            </TouchableOpacity>
 
-    const toggleModal = () => setModalVisible(!isModalVisible);
-    const togglePhotoModal = () => setPhotoModalVisible(!isPhotoModalVisible);
+            <TouchableOpacity style={styles.Item} onPress={onLogoutPress}>
+                <View style={styles.ItemLeft}> 
+                    <Feather name="log-out" size={20} color={Colors.ORANGE} />
+                    <Text style={[styles.ItemText, { color: Colors.ORANGE }]}>Sair</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={Colors.ORANGE} />
+            </TouchableOpacity>
+        </View>
+    );
+});
 
-    const confirmLogout = () => {
-        setModalVisible(false);
-        logout();
-    };
+const LogoutModal = React.memo(function LogoutModal({ isVisible, onBackdropPress, onConfirm, onCancel }: any) {
+    return (
+        <Modal 
+            isVisible={isVisible}
+            onBackdropPress={onBackdropPress}
+            onBackButtonPress={onBackdropPress}
+            animationIn="fadeIn"
+            animationOut="fadeOut"
+            useNativeDriverForBackdrop
+            style={styles.modalStyle}
+        >
+            <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Você realmente quer sair?</Text>
+                <Text style={styles.modalSubtitle}>Qualquer alteração não salva será perdida.</Text>
+                <View style={styles.modalButtonRow}>
+                    <TouchableOpacity onPress={onCancel} style={styles.btnCancel}>
+                        <Text style={styles.btnCancelText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={onConfirm} style={styles.btnConfirm}>
+                        <Text style={styles.btnConfirmText}>Sair</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+});
+
+// --- COMPONENTE PRINCIPAL ---
+export default function Configuracoes() {
+    const { logout } = useAuth();
+    const [isModalVisible, setModalVisible] = useState(false);
+
+    const toggleModal = useCallback(() => {
+        setModalVisible(prev => !prev);
+    }, []);
+
+    const confirmLogout = useCallback(() => {
+        toggleModal();
+        setTimeout(logout, 300);
+    }, [logout, toggleModal]);
 
     const [fontsLoaded] = useFonts({
         "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
@@ -116,7 +105,7 @@ export default function Configuracoes() {
 
     if (!fontsLoaded) {
         return (
-            <View style={[styles.Container, { backgroundColor: Colors.BG }]}>
+            <View style={[styles.Container, { justifyContent: "center" }]}>
                 <EasyDonateSvg />
             </View>
         );
@@ -140,142 +129,34 @@ export default function Configuracoes() {
                         </View>
 
                         <ScrollView style={styles.ScrollAll} showsVerticalScrollIndicator={false}>
-                            <View style={styles.ProfileCard}>
-                                <View style={styles.ProfileTouchable}>
-                                    <View style={styles.ProfileContent}>
-                                        <View style={styles.ProfileLeft}>
-
-
-
-                                            <AvatarUploader />
-                                            
-
-                                            <View>
-                                                <Text style={styles.ProfileName}>{usuario?.nome || "Usuário"}</Text>
-                                                <Text style={styles.ProfileEmail}>{usuario?.email || "Email"}</Text>
-                                            </View>
-
-                                        </View>
-
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View style={styles.SettingsList}>
-                                <TouchableOpacity style={styles.Item} onPress={() => router.push("/(auth)/conta")}>
-                                    <View style={styles.ItemLeft}>
-                                        <Feather name="user" size={20} color={Colors.ORANGE} />
-                                        <Text style={styles.ItemText}>Conta</Text>
-                                    </View>
-                                    <Feather name="chevron-right" size={20} color={Colors.GRAY} />
-                                </TouchableOpacity>
-
-                                <TouchableOpacity style={styles.Item} onPress={toggleModal}>
-                                    <View style={styles.ItemLeft}> 
-                                        <Feather name="log-out" size={20} color={Colors.ORANGE} />
-                                        <Text style={[styles.ItemText, { color: Colors.ORANGE }]}>Sair</Text>
-                                    </View>
-                                    <Feather name="chevron-right" size={20} color={Colors.ORANGE} />
-                                </TouchableOpacity>
-                            </View>
+                           <ProfileCard />
+                           <SettingsList onLogoutPress={toggleModal} />
                         </ScrollView>
-
+                        
                         <View style={styles.Footer}>
                             <BottomNavigation />
                         </View>
                     </View>
                 </View>
 
-                {/* Modal de confirmação */}
-                <Modal isVisible={isModalVisible}>
-                    <View style={{ backgroundColor: "white", padding: 20, borderRadius: 15 }}>
-                        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 20 }}>
-                            Você realmente quer sair?
-                        </Text>
-                        <Text style={{ fontSize: 13, fontWeight: "light", marginBottom: 20 }}>
-                            Qualquer alteração não salva será perdida.
-                        </Text>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                            <TouchableOpacity onPress={toggleModal} style={styles.btnCancel}>
-                                <Text style={styles.btnCancelText}>Cancelar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={confirmLogout} style={styles.btnConfirm}>
-                                <Text style={styles.btnConfirmText}>Sair</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-
-                
-
+                <LogoutModal 
+                    isVisible={isModalVisible}
+                    onBackdropPress={toggleModal}
+                    onConfirm={confirmLogout}
+                    onCancel={toggleModal}
+                />
             </SafeAreaView>
         </PrivateRoute>
     );
 }
 
-
+// Estilos limpos e finais
 const styles = StyleSheet.create({
     Container: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: Colors.BG,
-
-    },
-    //... no final do seu objeto de estilos
-    bottomModal: {
-        justifyContent: 'flex-end',
-        margin: 0,
-    },
-    modalContent: {
-        backgroundColor: 'white',
-        padding: 22,
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontFamily: 'Montserrat-Bold',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    modalButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 15,
-        borderTopWidth: 1,
-        borderTopColor: '#eee'
-    },
-    modalButtonText: {
-        marginLeft: 15,
-        fontSize: 16,
-        fontFamily: 'Montserrat',
-        color: Colors.BLACK,
-    },
-    btnCancel: {
-        // backgroundColor: Colors.BG,
-        padding: 10,
-        borderRadius: 35,
-        width: 140,
-        borderColor: Colors.INPUT_GRAY,
-        borderWidth: 1,
-        alignItems: "center",
-    },
-    btnCancelText: {
-        color: Colors.BLACK,
-        // fontWeight: "bold",
-    },
-    btnConfirm: {
-        backgroundColor: Colors.ORANGE,
-        padding: 10,
-        borderRadius: 35,
-        width: 140,
-        alignItems: "center",
-    },
-    btnConfirmText: {
-        color: Colors.WHITE,
-        fontWeight: "bold",
     },
     Wrapper: {
         width: "80%",
@@ -310,9 +191,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.WHITE,
         borderRadius: 15,
         padding: 15,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
         marginBottom: 20,
         elevation: 2,
         shadowColor: "#12121275",
@@ -320,59 +198,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
     },
-    ProfileTouchable: {
-        flex: 1,
-    },
     ProfileContent: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
+        alignItems: "center",
     },
     ProfileLeft: {
-        display: "flex",
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
     },
-    DivPerfil: {
-        // backgroundColor: "#fff",
-        width: "15%",
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center"
-    },
-
-    profileImageContainer: {
-        // Não precisa de muito, ele serve como referência para a posição do ícone.
-        // Pode-se definir width e height se necessário, mas vamos começar simples.
-        position: 'relative', // Padrão, mas bom deixar explícito para clareza
-    },
-    Img: {
-        backgroundColor: Colors.ORANGE,
-        width: 50,
-        height: 50,
-        borderRadius: 30,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        // borderWidth: 1,
-        // borderColor: Colors.ORANGE,
-        overflow: 'hidden'
-    },
-    profileImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-    },
-    editIconOverlay: {
-        position: 'absolute',
-        bottom: -3,
-        right: -3,
-        backgroundColor: Colors.ORANGE,
-        borderRadius: 15,
-        padding: 5,
-    },
-    // ...
     ProfileName: {
         fontFamily: "Montserrat-Bold",
         fontSize: 16,
@@ -414,5 +248,59 @@ const styles = StyleSheet.create({
         width: "100%",
         height: "8%",
         justifyContent: "flex-end",
+    },
+    // Estilos do Modal
+    modalStyle: {
+        margin: 0, 
+        justifyContent: 'center', 
+        alignItems: 'center'
+    },
+    modalContainer: {
+        backgroundColor: "white",
+        padding: 20,
+        borderRadius: 15,
+        alignItems: 'center',
+        width: '85%'
+    },
+    modalTitle: {
+        fontSize: 16,
+        fontFamily: 'Montserrat-Bold',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 13,
+        fontFamily: 'Montserrat',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalButtonRow: {
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 15,
+        width: '100%',
+    },
+    btnCancel: {
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 35,
+        borderColor: Colors.INPUT_GRAY,
+        borderWidth: 1,
+        alignItems: "center",
+    },
+    btnConfirm: {
+        paddingVertical: 12,
+        paddingHorizontal: 40,
+        backgroundColor: Colors.ORANGE,
+        borderRadius: 35,
+        alignItems: "center",
+    },
+    btnCancelText: {
+        color: Colors.BLACK,
+        fontWeight: 'bold',
+    },
+    btnConfirmText: {
+        color: Colors.WHITE,
+        fontWeight: "bold",
     },
 });

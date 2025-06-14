@@ -2,24 +2,26 @@
 
 import Colors from "@/components/Colors";
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+// Trocamos a importação para remover a enumeração obsoleta.
+import {
+    launchCameraAsync,
+    launchImageLibraryAsync,
+    requestCameraPermissionsAsync,
+    requestMediaLibraryPermissionsAsync
+} from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
 
-// --- INTERFACE ATUALIZADA ---
-// Adicionamos a nova propriedade opcional 'showDeleteOption'.
 interface PhotoPickerModalProps {
     isVisible: boolean;
     onClose: () => void;
     onPhotoSelected: (uri: string) => void;
     onDelete: () => void;
-    showDeleteOption?: boolean; // Nova propriedade
+    showDeleteOption?: boolean;
 }
 
-// --- COMPONENTE ATUALIZADO ---
-// Desestruturamos a nova propriedade 'showDeleteOption' e definimos seu valor padrão como 'false'.
 const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ 
     isVisible, 
     onClose, 
@@ -28,15 +30,14 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({
     showDeleteOption = false 
 }) => {
 
-    // --- LÓGICA DA CÂMERA (sem alterações) ---
     const takePhotoWithCamera = async () => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        const { status } = await requestCameraPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert('Permissão Negada', 'Desculpe, precisamos da permissão da câmera para isso funcionar!');
             return;
         }
 
-        let result = await ImagePicker.launchCameraAsync({
+        let result = await launchCameraAsync({
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -48,16 +49,17 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({
         }
     };
 
-    // --- LÓGICA DA GALERIA (sem alterações) ---
     const pickImageFromGallery = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const { status } = await requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert('Permissão Negada', 'Desculpe, precisamos da permissão da galeria para isso funcionar!');
             return;
         }
 
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'], // Usando a enumeração correta
+        let result = await launchImageLibraryAsync({
+            // --- CORREÇÃO FINAL APLICADA AQUI ---
+            // A string deve ser 'images' com 'i' minúsculo para corresponder ao tipo esperado.
+            mediaTypes: ['images'], 
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -73,6 +75,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({
         <Modal
             isVisible={isVisible}
             onBackdropPress={onClose}
+            onBackButtonPress={onClose}
             style={styles.bottomModal}
             animationIn="slideInUp"
             animationOut="slideOutDown"
@@ -91,8 +94,6 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({
                     <Text style={styles.modalButtonText}>Galeria</Text>
                 </TouchableOpacity>
 
-                {/* --- RENDERIZAÇÃO CONDICIONAL --- */}
-                {/* O botão de exclusão agora só aparece se 'showDeleteOption' for 'true'. */}
                 {showDeleteOption && (
                     <TouchableOpacity style={{ width: '100%' }} onPress={onDelete}>
                         <LinearGradient
@@ -113,7 +114,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({
     );
 };
 
-// --- ESTILOS (com uma pequena adição para o botão de cancelar) ---
+// Seus estilos continuam os mesmos...
 const styles = StyleSheet.create({
     bottomModal: {
         justifyContent: 'flex-end',
@@ -157,9 +158,8 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         fontSize: 16,
         fontFamily: "Montserrat",
-        color: Colors.BLACK, // Cor padrão para os botões
+        color: Colors.BLACK,
     },
-    // Adicionado um estilo específico para o botão de cancelar para remover a margem e o fundo
     cancelButton: {
         paddingVertical: 15,
         width: '100%',
