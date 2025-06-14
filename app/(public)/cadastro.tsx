@@ -203,7 +203,7 @@ export default function Cadastro() {
 
     // [CADASTRO ONG]
     const cadastroOng = async () => {
-        if (!email || !tipoUsuario || !nome || !cnpj || !tipoAtividade || !cep || !rua || !bairro || !cidade || !estado || !ddd || !numeroTel || !responsavelCadastro || !comprovanteRegistro || !senha || !senha2) {
+        if (!email || !tipoUsuario || !nome || !cnpj || !tipoAtividade || !cep || !rua || !bairro || !cidade || !estado || !ddd || !numeroTel || !responsavelCadastro || !senha || !senha2) {
             // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");  
             mostrarModalFeedback("Preencha todos os campos obrigatórios!", 'error');
             return;
@@ -267,15 +267,15 @@ export default function Cadastro() {
             const response = await api.post('/Ong', bodyRequestOng);
 
             if (response.status === 201) {
-                mostrarModalFeedback("ONG cadastrada com sucesso!", 'success');
+                mostrarModalFeedback("ONG cadastrada com sucesso!\nFinalize o preenchimento dos dados complementares da sua organização após realizar login.", 'success', 3100);
                 setTimeout(() => {
                     resetCamposOng();
                     router.replace('/login');
-                }, 2500);
+                }, 3100);
             }
 
         } catch (error: any) {
-            console.log("Erro ao cadastrar:", error);
+            console.warn("Erro ao cadastrar:", error);
 
             let msg = "Erro ao realizar cadastro!";
 
@@ -388,7 +388,7 @@ export default function Cadastro() {
             }
 
         } catch (error: any) {
-            console.log("Erro ao cadastrar:", error);
+            console.warn("Erro ao cadastrar:", error);
 
             let msg = "Erro ao realizar cadastro!";
 
@@ -753,17 +753,6 @@ export default function Cadastro() {
                                             />
                                         </View>
                                         <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Missão</Text>
-                                            <TextInput
-                                                placeholder="Descrição da missão"
-                                                maxLength={255}
-                                                value={descricaoMissao}
-                                                onChangeText={setDescricaoMissao}
-                                                keyboardType="default"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
                                             <Text style={styles.Labels}>CEP*</Text>
                                             <TextInput
                                                 placeholder="00000-000"
@@ -893,7 +882,7 @@ export default function Cadastro() {
                                             />
                                         </View>
                                         <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Comprovante de Registro*</Text>
+                                            <Text style={styles.Labels}>Comprovante de Registro</Text>
                                             <TextInput
                                                 placeholder="Comprovante de registro"
                                                 maxLength={255}
