@@ -1,26 +1,41 @@
-// components/AvatarUploader.tsx (VERSÃO CORRIGIDA)
+// components/AvatarUploader.tsx
 
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 import api from '@/api/axios';
 import { useAuth } from '@/routes/AuthContext';
 import Colors from './Colors';
-import PhotoPickerModal from './PhotoPickerModal'; // Seu modal inteligente
+import PhotoPickerModal from './PhotoPickerModal';
 
+// Chave da API do ImgBB
 const IMG_BB_API_KEY = "0064c7ca5d35d2ff095d09220c71f750";
 
-export function AvatarUploader() {
-    // --- LÓGICA ---
+// --- NOVA INTERFACE DE PROPRIEDADES ---
+// Adicionamos uma interface para as props do componente.
+// 'size' é opcional e tem um valor padrão de 60.
+interface AvatarUploaderProps {
+  size?: number;
+}
+
+// --- COMPONENTE PRINCIPAL ---
+export function AvatarUploader({ size = 60 }: AvatarUploaderProps) {
+    // --- LÓGICA EXISTENTE (sem alterações estruturais) ---
     const { usuario, atualizarUsuario } = useAuth();
     
     const [previewUri, setPreviewUri] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
 
-    // ERRO 1 CORRIGIDO: A função async é chamada dentro do useCallback
     const fetchUsuarioAtualizado = useCallback(async () => {
         if (!usuario?.idUsuario) return;
         try {
@@ -34,32 +49,29 @@ export function AvatarUploader() {
     }, [usuario?.idUsuario, usuario?.avatar, atualizarUsuario]);
 
     useFocusEffect(
-      useCallback(() => {
-        (async () => {
-          await fetchUsuarioAtualizado();
-        })();
-      }, [fetchUsuarioAtualizado])
+        useCallback(() => {
+            fetchUsuarioAtualizado();
+        }, [fetchUsuarioAtualizado])
     );
 
-    // Esta função agora recebe a URI diretamente do PhotoPickerModal
     const handleUpload = async (uri: string) => {
+        setModalVisible(false); // Fecha o modal ao iniciar o upload
         setPreviewUri(uri);
         setIsUploading(true);
         try {
             const response = await fetch(uri);
-        const blob = await response.blob();
-        
-        // Convertendo o blob para base64
-        const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result?.toString().split(",")[1] || "");
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+            const blob = await response.blob();
+            
+            // Convertendo o blob para base64 para enviar ao ImgBB
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result?.toString().split(",")[1] || "");
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
 
-        const formData = new FormData();
-        // O ImgBB aceita a imagem como uma string base64 no campo 'image'
-        formData.append("image", base64);
+            const formData = new FormData();
+            formData.append("image", base64);
 
             const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_API_KEY}`, {
                 method: "POST",
@@ -69,7 +81,7 @@ export function AvatarUploader() {
             const uploadData = await res.json();
             const uploadedUrl = uploadData.data?.url;
 
-            if (!uploadedUrl) throw new Error("Falha ao obter URL da imagem.");
+            if (!uploadedUrl) throw new Error("Falha ao obter URL da imagem do ImgBB.");
 
             await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
                 idUsuario: usuario.idUsuario,
@@ -80,32 +92,27 @@ export function AvatarUploader() {
 
         } catch (error) {
             console.warn("Erro no processo de upload:", error);
+            Alert.alert("Erro de Upload", "Não foi possível enviar sua foto. Tente novamente.");
         } finally {
             setIsUploading(false);
             setPreviewUri(null);
         }
     };
+    
+    const handleDelete = async () => {
+        setModalVisible(false); 
 
-    // Esta função serve pra excluir a foto do usuário
-    // Ela é chamada quando o usuário confirma a exclusão no modal
- const handleDelete = async () => {
-        setModalVisible(false); // Fecha o modal de opções de qualquer maneira
-
-        // 2. Mostra o Alerta de confirmação
         Alert.alert(
-            "Confirmar Exclusão", // Título do Alerta
-            "Tem certeza que deseja excluir sua foto? Essa ação é irreversível!", // Mensagem
+            "Confirmar Exclusão",
+            "Tem certeza que deseja excluir sua foto? Essa ação é irreversível!",
             [
-                // Array de botões
                 {
                     text: "Não",
-                    onPress: () => console.log("Exclusão cancelada"),
-                    style: "cancel" // Estilo para iOS
+                    style: "cancel"
                 },
                 { 
                     text: "Sim, Excluir", 
                     onPress: async () => {
-                        // 3. A lógica de exclusão agora vive dentro do 'onPress' do botão "Sim"
                         setIsUploading(true);
                         try {
                             await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
@@ -115,30 +122,36 @@ export function AvatarUploader() {
                             atualizarUsuario({ avatar: null });
                         } catch (error) {
                             console.warn("Erro ao excluir a foto:", error);
-                            // Opcional: Mostrar um alerta de erro aqui também
                             Alert.alert("Erro", "Não foi possível excluir a foto. Tente novamente.");
                         } finally {
                             setIsUploading(false);
                         }
                     },
-                    style: "destructive" // No iOS, isso deixa o texto do botão vermelho
+                    style: "destructive"
                 }
             ]
         );
     };
+
+    // --- NOVA GERAÇÃO DE ESTILOS DINÂMICOS ---
+    // Usamos 'useMemo' para calcular os estilos apenas quando a prop 'size' mudar.
+    // Todos os valores (width, height, borderRadius, icon size, etc.) são calculados
+    // proporcionalmente com base no 'size' fornecido.
+    const styles = useMemo(() => getDynamicStyles(size), [size]);
     
-    // --- PARTE VISUAL ---
+    // --- PARTE VISUAL (com estilos dinâmicos) ---
     return (
         <>
-            <View style={styles.profileImageContainer}>
-                <TouchableOpacity style={styles.imgContainer} onPress={() => setModalVisible(true)} disabled={isUploading}>
+            <TouchableOpacity style={styles.profileImageContainer} onPress={() => setModalVisible(true)} disabled={isUploading}>
+                <View style={styles.imgContainer} >
                     {previewUri || usuario?.avatar ? (
                         <Image
                             source={{ uri: previewUri || usuario?.avatar }}
                             style={styles.profileImage}
                         />
                     ) : (
-                        <FontAwesome6 name="user-large" size={15} color={Colors.WHITE} />
+                        // O tamanho do ícone também é dinâmico
+                        <FontAwesome6 name="user-large" size={size * 0.4} color={Colors.WHITE} />
                     )}
 
                     {isUploading && (
@@ -146,40 +159,47 @@ export function AvatarUploader() {
                             <ActivityIndicator size="small" color={Colors.WHITE} />
                         </View>
                     )}
-                </TouchableOpacity>
+                </View>
 
                 <View style={styles.editIconOverlay}>
-                    <FontAwesome6 name="camera" size={12} color={Colors.WHITE} />
+                     {/* O tamanho do ícone de câmera também é dinâmico */}
+                    <FontAwesome6 name="camera" size={size * 0.15} color={Colors.BG} />
                 </View>
-            </View>
-
-            {/* ERRO 2 CORRIGIDO: Passando a prop 'onPhotoSelected' que o seu modal espera */}
+            </TouchableOpacity>
+            
             <PhotoPickerModal
                 isVisible={isModalVisible}
                 onClose={() => setModalVisible(false)}
                 onPhotoSelected={handleUpload} 
                 onDelete={handleDelete} 
+                // Adiciona uma verificação para só mostrar a opção de deletar se houver um avatar
+                showDeleteOption={!!usuario?.avatar}
             />
         </>
     );
 };
 
-const styles = StyleSheet.create({
+// --- NOVA FUNÇÃO DE ESTILOS DINÂMICOS ---
+// Esta função gera um objeto de estilo com base no tamanho fornecido.
+// Isso evita a repetição e torna os estilos mais fáceis de manter.
+const getDynamicStyles = (size: number) => StyleSheet.create({
     profileImageContainer: {
         position: 'relative',
-        width: 60,
-        height: 60,
+        width: size,
+        height: size,
         alignItems: 'center',
         justifyContent: 'center',
     },
     imgContainer: {
         backgroundColor: Colors.ORANGE,
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: size,
+        height: size,
+        borderRadius: size / 2, // Perfeitamente circular
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
+        // borderWidth: 0.5 * size / 60, // Borda proporcional ao tamanho
+        // borderColor: Colors.ORANGE,
     },
     profileImage: {
         width: '100%',
@@ -190,16 +210,17 @@ const styles = StyleSheet.create({
         bottom: 0,
         right: 0,
         backgroundColor: Colors.ORANGE,
-        borderRadius: 15,
-        padding: 5,
-        borderWidth: 1,
-        borderColor: Colors.WHITE,
-        pointerEvents: 'none',
+        borderRadius: size * 0.3, // Proporcional
+        padding: size * 0.08, // Proporcional
+        borderWidth: Math.max(1, size * 0.015), // Borda com mínimo de 1px
+        borderColor: Colors.BG,
+        // 'pointerEvents' não é necessário aqui pois o ícone está sobre o TouchableOpacity
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderRadius: size / 2, // Garante que o overlay também seja circular
     }
 });

@@ -124,7 +124,7 @@ export default function Configuracoes() {
 
     return (
         <PrivateRoute>
-            <SafeAreaView style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BG }}>
                 <View style={styles.Container}>
                     <View style={styles.Wrapper}>
                         <View style={styles.Header}>
