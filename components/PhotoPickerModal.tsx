@@ -1,21 +1,34 @@
+// components/PhotoPickerModal.tsx
+
 import Colors from "@/components/Colors";
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker'; // Import necessário
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // Import do Alert
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
 
+// --- INTERFACE ATUALIZADA ---
+// Adicionamos a nova propriedade opcional 'showDeleteOption'.
 interface PhotoPickerModalProps {
     isVisible: boolean;
     onClose: () => void;
     onPhotoSelected: (uri: string) => void;
     onDelete: () => void;
+    showDeleteOption?: boolean; // Nova propriedade
 }
 
-const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose, onPhotoSelected, onDelete }) => {
+// --- COMPONENTE ATUALIZADO ---
+// Desestruturamos a nova propriedade 'showDeleteOption' e definimos seu valor padrão como 'false'.
+const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ 
+    isVisible, 
+    onClose, 
+    onPhotoSelected, 
+    onDelete, 
+    showDeleteOption = false 
+}) => {
 
-    // --- LÓGICA DA CÂMERA RESTAURADA ---
+    // --- LÓGICA DA CÂMERA (sem alterações) ---
     const takePhotoWithCamera = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
@@ -31,11 +44,11 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
 
         if (!result.canceled) {
             onPhotoSelected(result.assets[0].uri);
-            onClose(); // Fecha o modal após a seleção
+            onClose(); 
         }
     };
 
-    // --- LÓGICA DA GALERIA RESTAURADA ---
+    // --- LÓGICA DA GALERIA (sem alterações) ---
     const pickImageFromGallery = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -44,7 +57,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
         }
 
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
+            mediaTypes: ['images'], // Usando a enumeração correta
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -52,7 +65,7 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
 
         if (!result.canceled) {
             onPhotoSelected(result.assets[0].uri);
-            onClose(); // Fecha o modal após a seleção
+            onClose();
         }
     };
 
@@ -61,13 +74,16 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
             isVisible={isVisible}
             onBackdropPress={onClose}
             style={styles.bottomModal}
+            animationIn="slideInUp"
+            animationOut="slideOutDown"
+            backdropTransitionOutTiming={0}
         >
             <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
 
                 <TouchableOpacity style={styles.modalButton} onPress={takePhotoWithCamera}>
                     <Feather name="camera" size={20} color={Colors.ORANGE} />
-                    <Text style={[styles.modalButtonText, { color: Colors.BLACK }]}>Câmera</Text>
+                    <Text style={styles.modalButtonText}>Câmera</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.modalButton} onPress={pickImageFromGallery}>
@@ -75,25 +91,29 @@ const PhotoPickerModal: React.FC<PhotoPickerModalProps> = ({ isVisible, onClose,
                     <Text style={styles.modalButtonText}>Galeria</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={{ width: '100%' }} onPress={onDelete}>
-                    <LinearGradient
-                        {...Colors.SUNSET_GRADIENT}
-                        style={styles.baseButton}
-                    >
-                        <Feather name="trash-2" size={20} color={Colors.WHITE} />
-                        <Text style={[styles.modalButtonText, { color: Colors.WHITE }]}>Excluir</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                {/* --- RENDERIZAÇÃO CONDICIONAL --- */}
+                {/* O botão de exclusão agora só aparece se 'showDeleteOption' for 'true'. */}
+                {showDeleteOption && (
+                    <TouchableOpacity style={{ width: '100%' }} onPress={onDelete}>
+                        <LinearGradient
+                            {...Colors.SUNSET_GRADIENT}
+                            style={styles.baseButton}
+                        >
+                            <Feather name="trash-2" size={20} color={Colors.WHITE} />
+                            <Text style={[styles.modalButtonText, { color: Colors.WHITE }]}>Excluir</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
 
-                <TouchableOpacity style={[styles.modalButton]} onPress={onClose}>
-                    <Text style={[styles.modalButtonText, { color: Colors.BLACK }]}>Cancelar</Text>
+                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                    <Text style={[styles.modalButtonText, { color: Colors.BLACK, marginLeft: 0 }]}>Cancelar</Text>
                 </TouchableOpacity>
             </View>
         </Modal>
     );
 };
 
-// ... (seus estilos continuam os mesmos)
+// --- ESTILOS (com uma pequena adição para o botão de cancelar) ---
 const styles = StyleSheet.create({
     bottomModal: {
         justifyContent: 'flex-end',
@@ -112,6 +132,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontFamily: "Montserrat-Bold",
         marginBottom: 20,
+        color: Colors.BLACK,
     },
     baseButton: {
         flexDirection: 'row',
@@ -136,6 +157,14 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         fontSize: 16,
         fontFamily: "Montserrat",
+        color: Colors.BLACK, // Cor padrão para os botões
+    },
+    // Adicionado um estilo específico para o botão de cancelar para remover a margem e o fundo
+    cancelButton: {
+        paddingVertical: 15,
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 

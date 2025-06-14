@@ -77,7 +77,7 @@ export default function Ongs() {
 
     return (
         <PrivateRoute>
-            <SafeAreaView style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BG }}>
                 <View style={{ flex: 1 }}>
                     <MapView
                         style={StyleSheet.absoluteFill}

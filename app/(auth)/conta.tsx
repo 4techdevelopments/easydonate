@@ -1,384 +1,206 @@
-import api from "@/api/axios";
-import { useAuth } from "@/routes/AuthContext"; // ajuste o caminho se necessário
-import PrivateRoute from "@/routes/PrivateRoute";
-import { Entypo, Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Colors from "../../components/Colors"; // ajuste caminho para as cores
+// app/(auth)/conta.tsx
 
-export default function Conta() {
-    const { usuario } = useAuth();
+import api from '@/api/axios';
+import { AvatarUploader } from '@/components/AvatarUploader';
+import Colors from '@/components/Colors';
+import { ProfileDataField } from '@/components/ProfileDataField';
+import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
+import { useAuth } from '@/routes/AuthContext';
+import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-    const [nome, setNome] = useState(usuario?.nome || "");
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState(usuario?.senha || "");
-    const [senha2, setSenha2] = useState(usuario?.senha || "");
-    const [dataCriacao, setDataCriacao] = useState('');
-    const [tipoUsuario, setTipoUsuario] = useState('');
+export default function ContaScreen() {
+    const router = useRouter();
+    const { usuario, atualizarUsuario } = useAuth();
+    const { mostrarModalFeedback } = useModalFeedback();
 
-    // [PEGAR USUARIO]
-    const fetchUsuario = async () => {
-        try {
-            const response = await api.get(`/Usuario/${usuario.idUsuario}`);
+    const [nome, setNome] = useState(usuario?.nome || '');
+    const [email, setEmail] = useState(usuario?.email || '');
+    const [nomeSocial, setNomeSocial] = useState(usuario?.nomeSocial || '');
+    const [isSaving, setIsSaving] = useState(false);
 
-            if (response.status === 200) {
-                setEmail(response.data.email);
-                setDataCriacao(response.data.dataCriacao);
-                setTipoUsuario(response.data.tipoUsuario);
-            }
-        } catch (error: any) {
-            console.log("Erro ao puxar dados:", error);
-
-            let msg = "Erro ao puxar usuário!";
-
-            if (error?.response) {
-                if (typeof error.response.data === 'string') {
-                    msg = error.response.data;
-                } else if (error.response.data?.message) {
-                    msg = error.response.data.message;
-                }
-            } else if (error?.message) {
-                msg = error.message;
-            }
-
-            Alert.alert(msg);
-        }
-    }
-
-    useEffect(() => {
-        fetchUsuario();
-    }, []);
-
-    // [LIMPAR SENHA]
-    const resetSenha = () => {
-        setSenha('');
-        setSenha2('');
-    };
-
-    // [ATUALIZAR USUÁRIO]
     const handleSave = async () => {
-        if (!email.trim() || !senha.trim() || !senha2.trim()) {
-            Alert.alert("Erro", "Preencha os campos corretamente!");
-            return;
-        }
-
-        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
-        if (!emailRegex.test(email)) {
-            Alert.alert("Erro", "Digite um e-mail válido!");
-            return;
-        }
-
-        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        if (!senhaRegex.test(senha)) {
-            Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
-            return;
-        }
-
-        if (senha !== senha2) {
-            Alert.alert("Erro", "As senhas não coincidem!");
-            return;
-        }
-
-        let bodyRequest: any = {
+        setIsSaving(true);
+        const dadosParaSalvar = {
+            ...usuario,
+            nome,
             email,
-            senha,
-            dataCriacao,
-            tipoUsuario
-        }
+            nomeSocial,
+        };
 
         try {
-            const response = await api.put(`/Usuario/${usuario.idUsuario}`, bodyRequest);
-
-            if (response.status === 200) {
-                Alert.alert("Sucesso", "Usuário atualizado com sucesso!");
-                resetSenha();
-            }
-        } catch (error: any) {
-            console.log("Erro ao atualizar:", error);
-
-            let msg = "Erro ao atualizar usuário!";
-
-            if (error?.response) {
-                if (typeof error.response.data === 'string') {
-                    msg = error.response.data;
-                } else if (error.response.data?.message) {
-                    msg = error.response.data.message;
-                }
-            } else if (error?.message) {
-                msg = error.message;
-            }
-
-            Alert.alert(msg);
+            // No seu backend, a rota de DoadorController espera um objeto com idDoador
+            await api.put(`/Doador`, { ...dadosParaSalvar, idDoador: usuario.idDoador });
+            atualizarUsuario(dadosParaSalvar);
+            mostrarModalFeedback('Dados salvos com sucesso!', 'success');
+        } catch (error) {
+            console.error("Erro ao salvar dados:", error);
+            mostrarModalFeedback('Erro ao salvar os dados. Tente novamente.', 'error');
+        } finally {
+            setIsSaving(false);
         }
-    }
-
-    // [SENHA VISIVEL]
-    const [senhasVisiveis, setSenhasVisiveis] = useState<boolean[]>([false, false, false, false]);
-
-    const alternarVisibilidadeSenha = (index: number) => {
-        setSenhasVisiveis(prev => {
-            const novas = [...prev];
-            novas[index] = !novas[index];
-            return novas;
-        });
     };
 
     return (
-        <PrivateRoute>
-            <SafeAreaView style={{ flex: 1 }}>
-                <View style={styles.Container}>
-                    <View style={styles.Wrapper}>
-                        <View style={styles.Header}>
-                            <TouchableOpacity style={styles.BtnVoltar} onPress={() => router.back()}>
-                                <Feather name="chevron-left" style={styles.IconVoltar} />
-                            </TouchableOpacity>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Feather name="arrow-left" size={24} color={Colors.BLACK} />
+                    </TouchableOpacity>
+                    <Feather name="user" size={20} color={Colors.BLACK} />
+
+                    <Text style={styles.headerTitle}>Minha Conta</Text>
+                    <View style={{ width: 25 }} />
+                </View>
+
+                {/* Envolve o conteúdo principal para centralizar e adicionar espaçamento */}
+                <View style={styles.contentWrapper}>
+                    <ScrollView showsVerticalScrollIndicator={false} >
+                        <View style={styles.profileSection}>
+                            <AvatarUploader size={150}/>
+                            <Text style={styles.profileName}>{nome || "Nome do Usuário"}</Text>
+                            <Text style={styles.profileEmail}>{email}</Text>
+                        </View>
+
+                        <View style={styles.dataSection}>
+                            <Text style={styles.sectionTitle}>Meus Dados</Text>
+
+                            <ProfileDataField label="Nome Completo" value={nome} onChangeText={setNome} />
+                            <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
+                            <ProfileDataField label="Nome Social" value={nomeSocial} onChangeText={setNomeSocial} />
+
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
+                            <View style={styles.fieldContainer}>
+                                <Text style={styles.label}>CPF</Text>
+                                <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                            </View>
                         </View>
 
 
-                        <ScrollView style={styles.ScrollAll} showsVerticalScrollIndicator={false}>
-                            <View style={styles.SettingsList}>
-
-                                <View style={styles.TitleWrapper}>
-                                    <View style={styles.TitleContainer}>
-                                        <Feather name="edit" size={20} color={Colors.ORANGE} />
-                                        <Text style={styles.Title}>Editar informações</Text>
-                                    </View>
-                                </View>
-
-
-                                <View style={styles.Item}>
-                                    <View style={styles.inputWrapper}>
-                                        <Feather name="user" size={20} color={Colors.ORANGE} style={styles.inputIcon} />
-                                        <TextInput
-                                            style={styles.inputWithIcon}
-                                            value={nome}
-                                            maxLength={255}
-                                            onChangeText={setNome}
-                                            placeholder="Digite seu nome"
-                                            editable={false}
-                                        />
-                                    </View>
-                                </View>
-
-                                <View style={styles.Item}>
-                                    <View style={styles.inputWrapper}>
-                                        <Feather name="mail" size={20} color={Colors.ORANGE} style={styles.inputIcon} />
-
-                                        <TextInput
-                                            style={styles.inputWithIcon}
-                                            value={email}
-                                            maxLength={255}
-                                            onChangeText={setEmail}
-                                            placeholder="Digite seu email"
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                        />
-                                    </View>
-                                </View>
-                                <View style={styles.Item}>
-                                    <View style={styles.inputWrapper}>
-                                        <Feather name="lock" size={20} color={Colors.ORANGE} style={styles.inputIcon} />
-
-                                        <TextInput
-                                            style={styles.inputWithIcon}
-                                            value={senha}
-                                            onChangeText={setSenha}
-                                            placeholder="Digite sua senha"
-                                            maxLength={128}
-
-                                            keyboardType="default"
-                                            secureTextEntry={!senhasVisiveis[0]}
-                                            textContentType="password"
-                                            autoCapitalize="none"
-                                        />
-
-                                        <TouchableOpacity onPress={() => alternarVisibilidadeSenha(0)} style={styles.MostrarSenha}>
-                                            <Entypo
-                                                name={senhasVisiveis[0] ? "eye-with-line" : "eye"}
-                                                style={styles.IconEye}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                                <View style={styles.Item}>
-                                    <View style={styles.inputWrapper}>
-                                        <Feather name="lock" size={20} color={Colors.ORANGE} style={styles.inputIcon} />
-
-                                        <TextInput
-                                            style={styles.inputWithIcon}
-                                            value={senha2}
-                                            onChangeText={setSenha2}
-                                            placeholder="Repita sua senha"
-                                            maxLength={128}
-
-                                            keyboardType="default"
-                                            secureTextEntry={!senhasVisiveis[1]}
-                                            textContentType="password"
-                                            autoCapitalize="none"
-                                        />
-
-                                        <TouchableOpacity onPress={() => alternarVisibilidadeSenha(1)} style={styles.MostrarSenha}>
-                                            <Entypo
-                                                name={senhasVisiveis[1] ? "eye-with-line" : "eye"}
-                                                style={styles.IconEye}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-
-                            </View>
-                            <View style={styles.WrapperBtn}>
-                                <TouchableOpacity style={styles.button} onPress={handleSave}>
-                                    <Text style={styles.buttonText}>Salvar Alterações</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                        </ScrollView>
-                    </View>
+                    </ScrollView>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isSaving}>
+                        {isSaving ? (
+                            <ActivityIndicator color={Colors.WHITE} />
+                        ) : (
+                            <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
-            </SafeAreaView>
-        </PrivateRoute>
+            </View>
+        </SafeAreaView>
     );
 }
 
+// --- ESTILOS OTIMIZADOS PARA LAYOUT CLEAN ---
 const styles = StyleSheet.create({
-    ScrollAll: {
+    safeArea: {
         flex: 1,
-    },
-    IconVoltar: {
-        color: Colors.BLACK,
-        fontSize: 18
-    },
-    BtnVoltar: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: 40,
-        height: 40,
-        borderWidth: 2,
-        borderRadius: 10,
-        borderColor: Colors.ORANGE,
-        backgroundColor: Colors.BRANCO_BTN_VOLTAR,
-        marginBottom: 20
-    },
-    IconEye: {
-        fontSize: 20,
-        color: Colors.GRAY
-    },
-
-    MostrarSenha: {
-        //backgroundColor: "#f00",
-        width: "20%",
-        height: 50,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "absolute",
-        right: 0,
-        // top: 0
-    },
-
-    Container: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
         backgroundColor: Colors.BG,
     },
-    Wrapper: {
-        width: "80%",
-        height: "100%",
-    },
-    Header: {
-        width: "100%",
-        height: "15%",
-        display: "flex",
-        justifyContent: "flex-end"
-    },
-    ImgEasyDonate: {
-        width: 120,
-        height: 40,
-        marginBottom: 10,
-    },
-    TitleWrapper: {
+    container: {
         flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
+        paddingHorizontal: 35 // Padding horizontal um pouco menor
     },
-
-    TitleContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 5,
-        marginBottom: 10,
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: 15, // Espaçamento do topo controlado aqui
+        paddingBottom: 10,
     },
-    Title: {
-        fontSize: 16,
+    backButton: {
+        padding: 5,
+    },
+    headerTitle: {
+        fontSize: 18,
         fontFamily: "Montserrat-Bold",
         color: Colors.BLACK,
     },
-    SettingsList: {
-        borderRadius: 15,
-        // backgroundColor: Colors.WHITE,
-        paddingVertical: 10,
-        // gap: 5,
-        // marginTop: 20,
-        // elevation: 2,
-        // shadowColor: "#12121275",
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.2,
-        // shadowRadius: 4,
+    // Novo container para centralizar o conteúdo da ScrollView
+    contentWrapper: {
+        flex: 1,
+        justifyContent: 'center', // Centraliza o conteúdo verticalmente
     },
-    Item: {
-        paddingVertical: 15,
-        paddingHorizontal: 15,
+    profileSection: {
+        alignItems: 'center',
+        paddingTop: 10, // Espaço menor acima do avatar
+        paddingBottom: 25, // Espaço menor abaixo do email
     },
-    inputWrapper: {
-        position: "relative",
-        width: "100%",
-        height: 48,  // altura suficiente para o input e ícone
-        // marginBottom: 15,
-
+    profileName: {
+        fontSize: 22,
+        fontFamily: "Montserrat-Bold",
+        marginTop: 15,
+        color: Colors.BLACK,
     },
-
-    inputWithIcon: {
-        backgroundColor: Colors.INPUT_GRAY,
-        paddingVertical: 12,
-        paddingLeft: 40,  // espaço para o ícone
-        borderRadius: 8,
-        fontSize: 16,
-        borderColor: Colors.PRETO_BG,
-        borderWidth: 1,
-        width: "100%",
-        height: "100%",
+    profileEmail: {
+        fontSize: 15,
+        fontFamily: "Montserrat",
+        color: Colors.TEXT_LIGHT,
+        marginTop: 4,
     },
-
-    inputIcon: {
-        position: "absolute",
-        left: 12,
-        top: "50%",
-        transform: [{ translateY: -10 }],  // metade da altura do ícone (20px)
-        zIndex: 10,  // garantir que fique na frente
+    dataSection: {
+        marginBottom: 10, // Espaço menor antes do botão
     },
-
-    WrapperBtn: {
-        display: "flex",
-        alignItems: "center",
+    sectionTitle: {
+        fontSize: 18, // Título da seção um pouco menor
+        fontFamily: 'Montserrat-Bold',
+        color: Colors.BLACK,
+        marginBottom: 15,
     },
-
-    button: {
-        backgroundColor: Colors.ORANGE,
-        display: "flex",
-        justifyContent: "center",
-        // paddingVertical: 15,
+    fieldContainer: {
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 13, // Label um pouco menor
+        fontFamily: 'Montserrat',
+        color: Colors.TEXT_LIGHT,
+        marginBottom: 6,
+    },
+    valueText: {
+        backgroundColor: Colors.WHITE,
         borderRadius: 10,
-        alignItems: "center",
-        height: 50,
-        width: 200,
+        paddingHorizontal: 15,
+        paddingVertical: 13,
+        fontSize: 15,
+        fontFamily: 'Montserrat',
+        color: Colors.BLACK,
+        overflow: 'hidden',
     },
-    buttonText: {
+    saveButton: {
+        backgroundColor: Colors.ORANGE,
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    saveButtonText: {
         color: Colors.WHITE,
-        // fontWeight: "bold",
-        fontSize: 18,
+        fontSize: 16,
+        fontFamily: 'Montserrat',
     },
 });

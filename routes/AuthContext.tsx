@@ -72,11 +72,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const atualizarUsuario = (novosDados: any) => {
-        setUsuario((prevUsuario: any) => ({
-            ...prevUsuario,
-            ...novosDados,
-        }));
-    }
+    // Cria o novo objeto de usuário completo
+    const usuarioAtualizado = {
+        ...usuario,
+        ...novosDados,
+    };
+
+    // Atualiza o estado do React para a UI refletir a mudança instantaneamente
+    setUsuario(usuarioAtualizado);
+
+    // Salva o novo objeto de usuário no SecureStore para persistir os dados
+    SecureStore.setItemAsync("usuario", JSON.stringify(usuarioAtualizado));
+};
 
     if (loading) {
         return (
