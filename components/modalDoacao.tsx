@@ -1,4 +1,5 @@
 import api from "@/api/axios";
+import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
 import { useAuth } from "@/routes/AuthContext";
 import { Doador } from "@/types/Doador";
 import { Ong } from "@/types/Ong";
@@ -24,6 +25,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
     const [horaColeta, setHoraColeta] = useState('');
     const [idDoador, setIdDoador] = useState<Number>();
     const [status] = useState('');
+    const { mostrarModalFeedback } = useModalFeedback();
 
     // [PUXAR ENDEREÇO DA ONG]
     useEffect(() => {
@@ -96,6 +98,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
             return;
         }
 
+        // [DOAÇÃO DE DINHEIRO]
         if (tipoItem === "Dinheiro") {
             const regexQuantidade = /^\d{1,8}([.,]\d{1,2})?$/;
 
@@ -114,13 +117,14 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
 
                     if (response.status === 201) {
                         handleClose();
-                        Alert.alert("Sucesso", "Doação realizada com sucesso!");
+                        mostrarModalFeedback("Doação realizada com sucesso!", 'success');
+                        //Alert.alert("Sucesso", "Doação realizada com sucesso!");
                         return;
                     }
                 } catch (error: any) {
-                    console.log("Erro ao cadastrar:", error);
+                    console.warn("Erro ao cadastrar doação: ", error);
 
-                    let msg = "Erro ao realizar cadastro!";
+                    let msg = "Erro ao realizar cadastro de doação!";
 
                     if (error?.response) {
                         if (typeof error.response.data === 'string') {
@@ -132,16 +136,17 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                         msg = error.message;
                     }
 
-                    Alert.alert(msg);
+                    mostrarModalFeedback(msg, 'error');
                 }
             } else {
-                Alert.alert('Erro', 'Por favor, insira um valor válido com até 8 dígitos inteiros e 2 casas decimais.');
+                mostrarModalFeedback("Por favor, insira um valor válido com até 8 dígitos inteiros e 2 casas decimais.", "error");
+                return;
             }
         }
 
         if (tipoItem && tipoItem !== "Dinheiro") {
             if (!metodoEnvio) {
-                Alert.alert("Erro", "Selecione um método de envio!");
+                mostrarModalFeedback("Selecione um método de envio!", 'error');
                 return;
             }
 
@@ -161,13 +166,13 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
 
                     if (response.status === 201) {
                         handleClose();
-                        Alert.alert("Doação realizada com sucesso!");
+                        mostrarModalFeedback("Doação realizada com sucesso!", 'success');
                         return;
                     }
                 } catch (error: any) {
-                    console.log("Erro ao cadastrar:", error);
+                    console.warn("Erro ao cadastrar doação: ", error);
 
-                    let msg = "Erro ao realizar cadastro!";
+                    let msg = "Erro ao realizar cadastro de doação!";
 
                     if (error?.response) {
                         if (typeof error.response.data === 'string') {
@@ -179,15 +184,15 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                         msg = error.message;
                     }
 
-                    Alert.alert(msg);
+                    mostrarModalFeedback(msg, 'error');
                 }
             } else if (!regexQuantidade.test(quantidade) || !descricao) {
-                Alert.alert("Erro", "Preencha todos os campos!");
+                mostrarModalFeedback("Preencha todos os campos!", 'error');
                 return;
             }
 
             if (metodoEnvio === "Coleta" && (!regexQuantidade.test(quantidade) || !descricao || !dataColeta || !horaColeta)) {
-                Alert.alert("Erro", "Preencha todos os campos!");
+                mostrarModalFeedback("Preencha todos os campos!", 'error');
                 return;
             } else if (metodoEnvio === "Coleta" && (regexQuantidade.test(quantidade) && descricao && dataColeta && horaColeta)) {
                 let bodyRequestDoacao: any = {
@@ -206,13 +211,13 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
 
                     if (response.status === 201) {
                         handleClose();
-                        Alert.alert("Doação realizada com sucesso!");
+                        mostrarModalFeedback("Doação realizada com sucesso!", 'success');
                         return;
                     }
                 } catch (error: any) {
-                    console.log("Erro ao cadastrar:", error);
+                    console.warn("Erro ao cadastrar doação:", error);
 
-                    let msg = "Erro ao realizar cadastro!";
+                    let msg = "Erro ao realizar cadastro de doação!";
 
                     if (error?.response) {
                         if (typeof error.response.data === 'string') {
@@ -224,7 +229,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                         msg = error.message;
                     }
 
-                    Alert.alert(msg);
+                    mostrarModalFeedback(msg, 'error');
                 }
             }
         }

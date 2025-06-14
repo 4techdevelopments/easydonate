@@ -2,13 +2,14 @@ import api from '@/api/axios';
 import Colors from '@/components/Colors';
 import EasyDonateSvg from '@/components/easyDonateSvg';
 import ModalDoacao from '@/components/modalDoacao';
+import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
 import { useAuth } from '@/routes/AuthContext';
 import PrivateRoute from '@/routes/PrivateRoute';
 import { Ong } from '@/types/Ong';
 import { Entypo } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OngDetalhes() {
@@ -18,19 +19,23 @@ export default function OngDetalhes() {
     const [ong, setOng] = useState<Ong | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const { mostrarModalFeedback } = useModalFeedback();
 
     const isDono = usuario?.tipoUsuario === 'Ong' && usuario?.idUsuario === ong?.idUsuario;
     const isDoador = usuario?.tipoUsuario === 'Doador';
 
+    // [PUXAR TODAS AS ONGS]
     const fetchOng = async () => {
         try {
             setLoading(true);
             const response = await api.get<Ong>(`/Ong/${idOng}`);
 
-            setOng(response.data);
-            //console.log(response.data);
+            if (response.status === 200) {
+                setOng(response.data);
+            }
+
         } catch (error: any) {
-            console.log(error)
+            console.warn(error)
 
             let msg = "ONG não encontrada!";
             if (typeof error.response?.data === "string") {
@@ -39,7 +44,7 @@ export default function OngDetalhes() {
                 msg = error.response.data.message;
             }
 
-            Alert.alert('Erro', msg);
+            mostrarModalFeedback(msg, 'error');
         } finally {
             setLoading(false);
         }
@@ -49,20 +54,58 @@ export default function OngDetalhes() {
         fetchOng();
     }, []);
 
+    // [ALTERAR DADOS DA ONG]
     const handleSave = async () => {
+        if (ong?.cidade === null) {
+            mostrarModalFeedback("Preencha sua cidade!", 'error');
+            return;
+        }
+
+        if (ong?.estado.length !== 2) {
+            mostrarModalFeedback("Preencha com um estado válido!", 'error');
+            return;
+        }
+
+        if (ong?.ddd.length !== 2) {
+            mostrarModalFeedback("Preencha com um DDD válido!", 'error');
+            return;
+        }
+
+        if (ong?.telefone !== null && ong?.telefone?.length !== 8) {
+            mostrarModalFeedback("Preencha com um telefone válido!", 'error');
+            return;
+        }
+
+        if (ong?.telefoneCelular !== null && ong?.telefoneCelular?.length !== 9) {
+            mostrarModalFeedback("Preencha com um celular válido!", 'error');
+            return;
+        }
+
         try {
-            await api.put(`/Ong/${idOng}`, ong);
-            Alert.alert('Sucesso', 'Dados atualizados com sucesso');
+            const response = await api.put(`/Ong/${idOng}`, ong);
+
+            if (response.status === 200) {
+                mostrarModalFeedback("Dados atualizados com sucesso", 'success');
+                setTimeout(() => {
+                    router.replace('/home');
+                }, 2100);
+            }
+
         } catch (error: any) {
 
             let msg = "ONG não encontrada!";
-            if (typeof error.response?.data === "string") {
-                msg = error.response.data;
-            } else if (error.response?.data?.message) {
-                msg = error.response.data.message;
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
             }
 
-            Alert.alert('Erro', msg);
+            mostrarModalFeedback(msg, 'error');
         }
     };
 

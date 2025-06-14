@@ -37,6 +37,7 @@ type Doacao = {
     peso: string;
     data: string;
     ong: string;
+    descricao: string;
     icone: React.ComponentProps<typeof FontAwesome6>['name'];
 };
 
@@ -79,6 +80,14 @@ function CardDoacao({ doacao, onPress }: { doacao: Doacao, onPress: (id: number)
                     <View style={[styles.ProgressBarFill, { width: `${(doacao.progresso / doacao.total) * 100}%` }]} />
                 </View>
             </View>
+
+            {doacao.titulo !== "Dinheiro" && (
+                <View style={styles.CardDescription}>
+                    <Text style={styles.CardTextDescriptionBold}>Descrição: </Text>
+                    <Text style={styles.CardTextDescription}>{doacao.descricao}</Text>
+                </View>
+            )}
+
 
             <View style={styles.CardContent}>
                 <MaterialIcons name={doacao.icone} size={35} color="#000" />
@@ -140,9 +149,10 @@ export default function Doacoes() {
                         progresso,
                         total: 1,
                         titulo: item.tipoItem,
-                        peso: `${item.quantidade}`,
+                        peso: item.quantidade,
                         data: formatarData(item.dataHoraDoacao),
                         ong: item.nome,
+                        descricao: item.descricao,
                         icone: iconePorItem[item.tipoItem] ?? "volunteer-activism"
                     };
                 });
@@ -296,10 +306,31 @@ export default function Doacoes() {
                                     doacoesFiltradas.map((d) => (
                                         <CardDoacao key={d.id} doacao={d} onPress={(id) => {
                                             if (usuario.tipoUsuario === "Ong") {
-                                                alterarStatus(id);
-                                                setTimeout(() => {
-                                                    router.replace('/doacoes');
-                                                }, 500);
+
+                                                Alert.alert(
+                                                    "Confirmar Doação", // Título do Alerta
+                                                    "Tem certeza que deseja confirmar essa doação? Após mudar a situação para concluída, não poderá ser alterada!", // Mensagem
+                                                    [
+                                                        // Array de botões
+                                                        {
+                                                            text: "Não",
+                                                            onPress: () => console.log("Exclusão cancelada"),
+                                                            style: "cancel" // Estilo para iOS
+                                                        },
+                                                        {
+                                                            text: "Sim, Confirmar",
+                                                            onPress: async () => {
+                                                                alterarStatus(id);
+                                                                setTimeout(() => {
+                                                                    router.replace('/doacoes');
+                                                                }, 500);
+                                                            },
+                                                            style: "destructive" // No iOS, isso deixa o texto do botão vermelho
+                                                        }
+                                                    ]
+                                                );
+
+
                                             }
                                         }} />
                                     ))
@@ -350,6 +381,9 @@ const styles = StyleSheet.create({
     ProgressText: { fontFamily: "Montserrat", fontSize: 12, color: "#000", marginBottom: 5 },
     CardContent: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     CardInfo: { flex: 1, marginHorizontal: 10 },
+    CardDescription: { width: "100%", marginBottom: 15, flexDirection: "row" },
+    CardTextDescriptionBold: { fontFamily: "Montserrat-Bold", fontSize: 12 },
+    CardTextDescription: { fontFamily: "Montserrat", fontSize: 12 },
     CardTitle: {
         fontFamily: "Montserrat-Bold",
         fontSize: 13,
