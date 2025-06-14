@@ -77,7 +77,8 @@ export function AvatarUploader({ size = 60 }: AvatarUploaderProps) {
             const uploadData = await res.json();
             const uploadedUrl = uploadData.data?.url;
             if (!uploadedUrl) throw new Error("Falha ao obter URL da imagem do ImgBB.");
-            await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
+            // antes: /Usuario/Upload/${usuario.idUsuario}
+            await api.put(`/Upload/Avatar/${usuario.idUsuario}`, {
                 idUsuario: usuario.idUsuario,
                 avatar: uploadedUrl
             });
@@ -103,7 +104,7 @@ export function AvatarUploader({ size = 60 }: AvatarUploaderProps) {
                     onPress: async () => {
                         setIsUploading(true);
                         try {
-                            await api.put(`/Usuario/Upload/${usuario.idUsuario}`, {
+                            await api.put(`/Upload/Avatar/${usuario.idUsuario}`, {
                                 idUsuario: usuario.idUsuario,
                                 avatar: null
                             });
