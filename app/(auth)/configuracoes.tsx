@@ -165,7 +165,7 @@ export default function Configuracoes() {
                                 <TouchableOpacity style={styles.Item} onPress={() => router.push("/(auth)/conta")}>
                                     <View style={styles.ItemLeft}>
                                         <Feather name="user" size={20} color={Colors.ORANGE} />
-                                        <Text style={styles.ItemText}>Conta</Text>
+                                        <Text style={styles.ItemText}>Minha conta</Text>
                                     </View>
                                     <Feather name="chevron-right" size={20} color={Colors.GRAY} />
                                 </TouchableOpacity>

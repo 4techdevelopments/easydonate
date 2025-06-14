@@ -51,23 +51,24 @@ export default function ContaScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Feather name="arrow-left" size={24} color={Colors.BLACK} />
                     </TouchableOpacity>
-                    <Feather name="user" size={20} color={Colors.BLACK} />
-
-                    <Text style={styles.headerTitle}>Minha Conta</Text>
-                    <View style={{ width: 25 }} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center', gap: 10 }}>
+                        <Feather name="user" size={20} color={Colors.BLACK} />
+                        <Text style={styles.headerTitle}>Minha conta</Text>
+                        <View style={{ width: 25 }} />
+                    </View>
                 </View>
 
                 {/* Envolve o conteúdo principal para centralizar e adicionar espaçamento */}
                 <View style={styles.contentWrapper}>
                     <ScrollView showsVerticalScrollIndicator={false} >
                         <View style={styles.profileSection}>
-                            <AvatarUploader size={150}/>
+                            <AvatarUploader size={150} />
                             <Text style={styles.profileName}>{nome || "Nome do Usuário"}</Text>
-                            <Text style={styles.profileEmail}>{email}</Text>
+                            {/* <Text style={styles.profileEmail}>{email}</Text> */}
                         </View>
 
                         <View style={styles.dataSection}>
-                            <Text style={styles.sectionTitle}>Meus Dados</Text>
+                            {/* <Text style={styles.sectionTitle}>Meus dados:</Text> */}
 
                             <ProfileDataField label="Nome Completo" value={nome} onChangeText={setNome} />
                             <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 18,
-        fontFamily: "Montserrat-Bold",
+        fontFamily: "Montserrat",
         color: Colors.BLACK,
     },
     // Novo container para centralizar o conteúdo da ScrollView
