@@ -36,6 +36,8 @@ const ProfileCard = React.memo(function ProfileCard() {
 });
 
 const SettingsList = React.memo(function SettingsList({ onLogoutPress }: { onLogoutPress: () => void }) {
+    const { usuario } = useAuth();
+
     return (
         <View style={styles.SettingsList}>
             <TouchableOpacity style={styles.Item} onPress={() => router.push("/(auth)/conta")}>
@@ -45,6 +47,27 @@ const SettingsList = React.memo(function SettingsList({ onLogoutPress }: { onLog
                 </View>
                 <Feather name="chevron-right" size={20} color={Colors.GRAY} />
             </TouchableOpacity>
+
+
+            <TouchableOpacity style={styles.Item} onPress={() => {}}>
+                <View style={styles.ItemLeft}>
+                    <Feather name="info" size={20} color={Colors.ORANGE} />
+                    <Text style={styles.ItemText}>Suporte</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={Colors.GRAY} />
+            </TouchableOpacity>
+
+
+            {usuario.tipoUsuario === "ADM" && (
+                <TouchableOpacity style={styles.Item} onPress={() => router.push("/(auth)/addLocalizacoes")}>
+                    <View style={styles.ItemLeft}>
+                        <Feather name="map-pin" size={20} color={Colors.ORANGE} />
+                        <Text style={styles.ItemText}>Localizações</Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color={Colors.GRAY} />
+                </TouchableOpacity>
+            )}
+
 
             <TouchableOpacity style={styles.Item} onPress={onLogoutPress}>
                 <View style={styles.ItemLeft}> 
