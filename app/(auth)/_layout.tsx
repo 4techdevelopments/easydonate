@@ -14,6 +14,7 @@ export default function AuthLayout() { // Renomeado para mais clareza
       <Stack.Screen name="configuracoes" options={{ headerShown: false }} />
       <Stack.Screen name="conta" options={{ headerShown: false }} />
       <Stack.Screen name="ongDetalhes" options={{ headerShown: false }} />
+      <Stack.Screen name="addLocalizacoes" options={{ headerShown: false }} />
     </Stack>
   );
 }
