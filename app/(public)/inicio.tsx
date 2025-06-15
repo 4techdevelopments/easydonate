@@ -21,6 +21,7 @@ export default function Index() {
 
   const [fontsLoaded] = useFonts({
     "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
+    "Montserrat-Medium": require("../../assets/fonts/Montserrat-Medium.ttf"),
     "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
     "Montserrat-Italic": require("../../assets/fonts/Montserrat-Italic.ttf"),
     "Montserrat-BoldItalic": require("../../assets/fonts/Montserrat-BoldItalic.ttf")
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: Colors.WHITE,
     fontSize: 17,
-    fontFamily: "Montserrat-Medium"
+    fontFamily: "Montserrat",
   },
   BtnCadastro: {
     width: "100%",
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: Colors.ORANGE,
     fontSize: 17,
-    fontFamily: "Montserrat-Medium"
+    fontFamily: "Montserrat-Medium",
   },
   P: {
     textAlign: "center",
