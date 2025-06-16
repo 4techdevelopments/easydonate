@@ -2,6 +2,7 @@ import api from "@/api/axios";
 import BottomNavigation from "@/components/bottomNavigation";
 import { DisplayAvatar } from "@/components/DisplayAvatar";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -123,6 +124,8 @@ export default function Doacoes() {
     const [doacoes, setDoacoes] = useState<Doacao[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { mostrarModalFeedback } = useModalFeedback();
+
     useEffect(() => {
         const carregarDoacoes = async () => {
             try {
@@ -139,7 +142,9 @@ export default function Doacoes() {
                     return false;
                 });
 
-                const doacoesMapeadas = doacoesFiltradas.map((item) => {
+                const doacoesMapeadas = doacoesFiltradas
+                .filter((item) => item.status !== "Cancelado")
+                .map((item) => {
                     const statusTraduzido = traduzirStatus(item.status);
                     const progresso = statusTraduzido === "Concluídas" ? 1 : statusTraduzido === "Em andamento" ? 0.5 : 0;
 
@@ -201,7 +206,7 @@ export default function Doacoes() {
             const response = await api.put(`/Agendamento/${id}`, bodyRequestAgendamento);
 
             if (response.status === 200) {
-                Alert.alert("Doação confirmada com sucesso!");
+                mostrarModalFeedback("Doação confirmada com sucesso!", 'success');
                 return;
             }
 
@@ -223,6 +228,39 @@ export default function Doacoes() {
             if (msg !== "O agendamento já está concluído!") {
                 console.warn(msg);
             }
+        }
+    }
+
+    // [ALTERAR STATUS PARA CANCELADO]
+    const cancelarSituacao = async (id: number) => {
+        let bodyRequestAgendamento: any = {
+            status: "Cancelado"
+        };
+
+        try {
+            const response = await api.put(`/Agendamento/${id}`, bodyRequestAgendamento);
+
+            if (response.status === 200) {
+                mostrarModalFeedback("Doação cancelada com sucesso!", 'success');
+                return;
+            }
+
+        } catch (error: any) {
+            console.log(error);
+
+            let msg = "Não foi possível cancelar a doação!";
+
+            if (error?.response) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                }
+            } else if (error?.message) {
+                msg = error.message;
+            }
+
+            console.warn(msg)
         }
     }
 
@@ -313,12 +351,22 @@ export default function Doacoes() {
                                                     [
                                                         // Array de botões
                                                         {
-                                                            text: "Não",
-                                                            onPress: () => console.log("Exclusão cancelada"),
+                                                            text: "Fechar",
+                                                            onPress: () => {},
                                                             style: "cancel" // Estilo para iOS
                                                         },
                                                         {
-                                                            text: "Sim, Confirmar",
+                                                            text: "Cancelar Doação",
+                                                            onPress: async () => {
+                                                                cancelarSituacao(id);
+                                                                setTimeout(() => {
+                                                                    router.replace('/doacoes');
+                                                                }, 500);
+                                                            },
+                                                            style: "default"
+                                                        },
+                                                        {
+                                                            text: "Confirmar Doação",
                                                             onPress: async () => {
                                                                 alterarStatus(id);
                                                                 setTimeout(() => {

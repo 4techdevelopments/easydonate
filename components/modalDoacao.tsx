@@ -35,6 +35,11 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         const message = `Olá, tudo bem? 😊\n\nSou *${usuario.nome}* e gostaria de informar que tenho a intenção de doar *R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* para a *${ong.nome}*.\n\nGostaria de confirmar os dados para o pagamento via *Pix*, por favor.\nAgradeço muito a oportunidade de apoiar o trabalho de vocês!\n\nAguardo a confirmação. 🙏`;
         const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
+        if (!ong.telefoneCelular) {
+            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error');
+            return;
+        }
+
         Linking.canOpenURL(url)
             .then((supported) => {
                 if (supported) {
@@ -120,6 +125,11 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         // [DOAÇÃO DE DINHEIRO]
         if (tipoItem === "Dinheiro") {
             const regexQuantidade = /^\d{1,8}([.,]\d{1,2})?$/;
+
+            if (!ong.telefoneCelular) {
+                mostrarModalFeedback("Não foi possível concluir a doação. A ONG não possui WhatsApp!", 'error');
+                return;
+            }
 
             if (regexQuantidade.test(quantidade)) {
                 let bodyRequestDoacao: any = {
