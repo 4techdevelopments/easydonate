@@ -3,6 +3,7 @@ import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
 import { useAuth } from "@/routes/AuthContext";
 import { Doador } from "@/types/Doador";
 import { Ong } from "@/types/Ong";
+import * as Linking from 'expo-linking';
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Colors from "./Colors";
@@ -26,6 +27,24 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
     const [idDoador, setIdDoador] = useState<Number>();
     const [status] = useState('');
     const { mostrarModalFeedback } = useModalFeedback();
+
+    // [ENVIAR MENSAGEM - ZAP]
+    const sendZap = () => {
+        const valor = Number(quantidade);
+        const phone = `55${ong.ddd}${ong.telefoneCelular}`;
+        const message = `Olá, tudo bem? 😊\n\nSou *${usuario.nome}* e gostaria de informar que tenho a intenção de doar *R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* para a *${ong.nome}*.\n\nGostaria de confirmar os dados para o pagamento via *Pix*, por favor.\nAgradeço muito a oportunidade de apoiar o trabalho de vocês!\n\nAguardo a confirmação. 🙏`;
+        const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+
+        Linking.canOpenURL(url)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(url);
+                } else {
+                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error');
+                }
+            })
+            .catch((err) => console.warn("Erro: ", err));
+    };
 
     // [PUXAR ENDEREÇO DA ONG]
     useEffect(() => {
@@ -117,8 +136,10 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
 
                     if (response.status === 201) {
                         handleClose();
-                        mostrarModalFeedback("Doação realizada com sucesso!", 'success');
-                        //Alert.alert("Sucesso", "Doação realizada com sucesso!");
+                        mostrarModalFeedback("Doação cadastrada com sucesso!", 'success');
+                        setTimeout(() => {
+                            sendZap();
+                        }, 2100)
                         return;
                     }
                 } catch (error: any) {
