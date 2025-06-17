@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     CardInfo: { flex: 1, marginHorizontal: 10 },
     CardDescription: { width: "100%", marginBottom: 15, flexDirection: "row" },
     CardTextDescriptionBold: { fontFamily: "Montserrat-Bold", fontSize: 12 },
-    CardTextDescription: { fontFamily: "Montserrat", fontSize: 12 },
+    CardTextDescription: { fontFamily: "Montserrat", fontSize: 12, maxWidth:"75%" },
     CardTitle: {
         fontFamily: "Montserrat-Bold",
         fontSize: 13,
