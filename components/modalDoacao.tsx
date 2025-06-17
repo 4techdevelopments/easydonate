@@ -3,9 +3,11 @@ import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
 import { useAuth } from "@/routes/AuthContext";
 import { Doador } from "@/types/Doador";
 import { Ong } from "@/types/Ong";
+import { FontAwesome } from "@expo/vector-icons";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Colors from "./Colors";
 import Dropdown from "./dropdown";
 
@@ -23,16 +25,106 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
     const [descricao, setDescricao] = useState('');
     const [endereco, setEndereco] = useState('');
     const [dataColeta, setDataColeta] = useState('');
+    const [dataColetaISO, setDataColetaISO] = useState('');
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [horaColeta, setHoraColeta] = useState('');
     const [idDoador, setIdDoador] = useState<Number>();
     const [status] = useState('');
     const { mostrarModalFeedback } = useModalFeedback();
+
+    // [DATE TIME]
+    const formatDateToDisplay = (date: Date): string => {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    const formatDateToISO = (date: Date): string => {
+        return date.toISOString().split('T')[0];
+    };
+
+    const handleDateChange = (event: any, date?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (date) {
+            setSelectedDate(date);
+            setDataColeta(formatDateToDisplay(date));
+            setDataColetaISO(formatDateToISO(date));
+        }
+    };
+
+    // [MUDAR MASCARA HORA COLETA]
+    const handleHoraChange = (text: string) => {
+        const raw = text.replace(/\D/g, '');
+
+        if (raw.length <= 4) {
+            let formatted = raw;
+
+            if (raw.length >= 3) {
+                formatted = `${raw.slice(0, 2)}:${raw.slice(2, 4)}`;
+            }
+
+            if (raw.length === 4) {
+                const horas = parseInt(raw.slice(0, 2), 10);
+                const minutos = parseInt(raw.slice(2, 4), 10);
+
+                if (horas > 23 || minutos > 59) {
+                    setHoraColeta("00:00"); // ou exibir um alerta
+                    return;
+                }
+            }
+
+            setHoraColeta(formatted);
+        }
+    };
 
     // [ENVIAR MENSAGEM - ZAP]
     const sendZap = () => {
         const valor = Number(quantidade);
         const phone = `55${ong.ddd}${ong.telefoneCelular}`;
         const message = `Olá, tudo bem? 😊\n\nSou *${usuario.nome}* e gostaria de informar que tenho a intenção de doar *R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* para a *${ong.nome}*.\n\nGostaria de confirmar os dados para o pagamento via *Pix*, por favor.\nAgradeço muito a oportunidade de apoiar o trabalho de vocês!\n\nAguardo a confirmação. 🙏`;
+        const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+
+        if (!ong.telefoneCelular) {
+            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error');
+            return;
+        }
+
+        Linking.canOpenURL(url)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(url);
+                } else {
+                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error');
+                }
+            })
+            .catch((err) => console.warn("Erro: ", err));
+    };
+
+    // [ENVIAR MENSAGEM - ZAP]
+    const sendZapColeta = async () => {
+        const response = await api.get<Doador>(`/Doador/${usuario.idUsuario}`);
+        let ruaCasa, bairroUF, telefone;
+
+        if (response.status === 200) {
+            if (response.data.numero !== null) {
+                ruaCasa = `${response.data.rua}, ${response.data.numero}`;
+            } else {
+                ruaCasa = `${response.data.rua}`;
+            }
+
+            if (response.data.telefoneCelular !== null) {
+                telefone = `(${response.data.ddd}) ${response.data.telefoneCelular}`;
+            } else {
+                telefone = `(${response.data.ddd}) ${response.data.telefone}`;
+            }
+
+            bairroUF = `${response.data.bairro}, ${response.data.cidade} - ${response.data.estado}`;
+        }
+
+        const phone = `55${ong.ddd}${ong.telefoneCelular}`;
+        const message = `Olá, tudo bem? 😊\n\nSou *${usuario.nome}* e gostaria de informar que tenho a intenção de doar *${quantidade}* (Kg, L, ou Un) para a *${ong.nome}*.\n\nGostaria de agendar a coleta para dia ${dataColeta} às ${horaColeta} horas.\n\n*Número para contato:* ${telefone}\n*Endereço:* ${ruaCasa}\n*${bairroUF}*\n\n*Descrição da doação:* ${descricao}\n\nAgradeço muito a oportunidade de apoiar o trabalho de vocês!\n\nAguardo a confirmação. 🙏`;
         const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
         if (!ong.telefoneCelular) {
@@ -182,7 +274,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
             }
 
             const regexQuantidade = /^\d{1,8}([.,]\d{1,2})?$/;
-            if (regexQuantidade.test(quantidade) && descricao) {
+            if (regexQuantidade.test(quantidade) && descricao && metodoEnvio === "Entrega") {
                 let bodyRequestDoacao: any = {
                     idDoador,
                     idOng: ong.idOng,
@@ -233,7 +325,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                     quantidade: parseFloat(quantidade.replace(',', '.')),
                     descricao,
                     status: "Pendente",
-                    dataColeta,
+                    dataColeta: dataColetaISO,
                     horaColeta
                 };
 
@@ -243,6 +335,9 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                     if (response.status === 201) {
                         handleClose();
                         mostrarModalFeedback("Doação realizada com sucesso!", 'success');
+                        setTimeout(() => {
+                            sendZapColeta();
+                        }, 2100)
                         return;
                     }
                 } catch (error: any) {
@@ -339,7 +434,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                             <View style={styles.InputNormal}>
                                 <Text style={styles.Label}>Descrição</Text>
                                 <TextInput
-                                    placeholder="Ex: 10Kg arroz, 5kg feijão"
+                                    placeholder="Ex: Validade do alimento"
                                     maxLength={255}
                                     style={styles.Input}
                                     value={descricao}
@@ -369,22 +464,36 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                                     <Text style={styles.Label}>Data Coleta</Text>
                                     <TextInput
                                         placeholder="00/00/0000"
-                                        maxLength={8}
+                                        maxLength={10}
                                         keyboardType="number-pad"
-                                        style={styles.Input}
+                                        style={[styles.Input, { paddingLeft: 10 }]}
                                         value={dataColeta}
-                                        onChangeText={setDataColeta}
+                                        editable={false}
                                     />
+
+                                    <Pressable onPress={() => setShowDatePicker(true)} style={{ position: "absolute", bottom: 12, right: 6 }}>
+                                        <FontAwesome name="calendar" size={22} color={Colors.ORANGE} />
+                                    </Pressable>
+
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={selectedDate || new Date()}
+                                            mode="date"
+                                            display="default"
+                                            minimumDate={new Date()}
+                                            onChange={handleDateChange}
+                                        />
+                                    )}
                                 </View>
                                 <View style={styles.WrapperInputMini}>
                                     <Text style={styles.Label}>Hora Coleta</Text>
                                     <TextInput
                                         placeholder="00:00"
-                                        maxLength={4}
+                                        maxLength={5}
                                         keyboardType="number-pad"
                                         style={styles.Input}
                                         value={horaColeta}
-                                        onChangeText={setHoraColeta}
+                                        onChangeText={handleHoraChange}
                                     />
                                 </View>
                             </View>
