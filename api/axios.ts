@@ -7,7 +7,7 @@ import * as SecureStore from "expo-secure-store";
 // FACUL IP 2: http://192.168.56.1:5062/api
 
 const api = axios.create({
-    baseURL: "http://192.168.2.13:5062/api", // Replace with your API URL
+    baseURL: "http://192.168.2.15:5062/api", // Replace with your API URL
     headers: {
         "Content-Type": "application/json"
     },

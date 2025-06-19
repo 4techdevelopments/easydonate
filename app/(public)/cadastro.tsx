@@ -104,7 +104,7 @@ export default function Cadastro() {
         } else if (selectedOption === 'Doador') {
             cadastroDoador();
         } else {
-            mostrarModalFeedback("Selecione pelo menos um tipo de doador!", 'error');
+            mostrarModalFeedback("Selecione pelo menos um tipo de doador!", 'error', undefined, "Ops! Algo deu errado...");
         }
     };
 

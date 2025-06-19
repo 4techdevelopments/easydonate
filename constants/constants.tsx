@@ -3,7 +3,7 @@ export const Inicio = {
     mudar_vidas: "Pronto para mudar vidas?",
     login: "Login",
     cadastro: "Cadastre-se",
-    transformar_generosidade: "Transforme sua generosidade em ação com nosso app, feito para facilitar suas doações!"
+    transformar_generosidade: "Transforme sua generosidade em ação com nosso app, feito para facilitar suas doações!",
 }
 
 export const Logar = {
@@ -12,5 +12,8 @@ export const Logar = {
     esqueceu_senha: "Esqueceu sua senha?",
     login: "Login",
     sem_conta: "Não tem uma conta ainda?",
-    fazer_cadastro: "Faça seu cadastro!"
+    fazer_cadastro: "Faça seu cadastro!",
+}
+export const Cadastrar = {
+    fazer_login: "Faça seu login!",
 }
