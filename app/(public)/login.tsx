@@ -9,8 +9,6 @@ import { Entypo, Feather } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-// --- IMPORTAÇÕES OTIMIZADAS ---
-// LayoutAnimation e UIManager foram removidos.
 import {
   Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
 } from "react-native";
@@ -24,7 +22,7 @@ export default React.memo(function Login() {
   const [senha, setSenha] = useState('');
   const { mostrarModalFeedback } = useModalFeedback();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
-  
+
   const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export default React.memo(function Login() {
 
     const keyboardShowListener = Keyboard.addListener(keyboardShowEvent, () => {
       Animated.timing(translateY, {
-        toValue: -45, // Valor que você ajustou e gostou
+        toValue: -55,
         duration: 500,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
@@ -55,13 +53,17 @@ export default React.memo(function Login() {
     };
   }, [translateY]);
 
-  // O useEffect do LayoutAnimation foi removido por ser redundante.
-
   const handleLogin = async () => {
     try {
       const response = await api.post('/Login', { email, senha });
       const { token, usuario } = response.data;
-      mostrarModalFeedback("Login efetuado com sucesso!", 'success');
+      // A chamada agora inclui a duração (1500ms) e o título customizado.
+      mostrarModalFeedback(
+        "Login efetuado com sucesso!",
+        'success',
+        1500,
+        "Bem-vindo(a) de volta!"
+      );
 
       setTimeout(() => {
         login(token, usuario);
@@ -73,7 +75,13 @@ export default React.memo(function Login() {
       if (typeof error.response?.data === 'string' && error.response.data) {
         msg = error.response.data;
       }
-      mostrarModalFeedback(msg, 'error');
+      // Aqui, podemos passar um título customizado para o erro também.
+      mostrarModalFeedback(
+        msg,
+        'error',
+        undefined, // Não precisamos de duração para o erro, então passamos undefined
+        "Ops! Algo deu errado"
+      );
     }
   };
 
@@ -106,52 +114,63 @@ export default React.memo(function Login() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* --- HEADER --- */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Feather name="arrow-left" style={styles.backIcon} />
             </TouchableOpacity>
           </View>
-          
-          {/* --- SECTION (main content) --- */}
+
           <Animated.View style={[styles.section, { transform: [{ translateY }] }]}>
             <Text style={styles.h1}>{Logar.bem_vindo}</Text>
             <Text style={styles.h2}>{Logar.estamos_felizes}</Text>
 
             <View style={styles.form}>
+              {/* --- INÍCIO DA CORREÇÃO ESTRUTURAL --- */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Digite seu e-mail"
-                  placeholderTextColor={Colors.GRAY}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                />
+                {/* 1. Usamos a View "casca" com o overflow:hidden */}
+                <View style={styles.inputClipWrapper}>
+                  <TextInput
+                    // 2. E o TextInput tem o estilo visual completo
+                    style={styles.input}
+                    placeholder="Digite seu e-mail"
+                    placeholderTextColor={Colors.GRAY}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    autoComplete="email"
+                  />
+                </View>
               </View>
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Senha</Text>
-                <View style={styles.passwordWrapper}>
-                  <TextInput
-                    style={styles.inputInner}
-                    placeholder="Digite sua senha"
-                    placeholderTextColor={Colors.GRAY}
-                    value={senha}
-                    onChangeText={setSenha}
-                    secureTextEntry={!senhaVisivel}
-                  />
-                  <TouchableOpacity style={styles.eyeButton} onPress={() => setSenhaVisivel(!senhaVisivel)}>
-                    <Entypo name={senhaVisivel ? "eye-with-line" : "eye"} style={styles.eyeIcon} />
-                  </TouchableOpacity>
+                {/* 3. A mesma estrutura de "casca" é aplicada aqui */}
+                <View style={styles.inputClipWrapper}>
+                  {/* 4. E o wrapper interno agora tem o estilo visual completo do input */}
+                  <View style={[styles.input, { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }]}>
+                    <TextInput
+                      style={styles.inputInner}
+                      placeholder="Digite sua senha"
+                      placeholderTextColor={Colors.GRAY}
+                      value={senha}
+                      onChangeText={setSenha}
+                      secureTextEntry={!senhaVisivel}
+                      textContentType="password"
+                      autoComplete="password"
+                    />
+                    <TouchableOpacity style={styles.eyeButton} onPress={() => setSenhaVisivel(!senhaVisivel)}>
+                      <Entypo name={senhaVisivel ? "eye-with-line" : "eye"} style={styles.eyeIcon} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
                 <TouchableOpacity style={styles.forgotPasswordButton}>
                   <Text style={styles.forgotPasswordText}>{Logar.esqueceu_senha}</Text>
                 </TouchableOpacity>
               </View>
+              {/* --- FIM DA CORREÇÃO ESTRUTURAL --- */}
 
               <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                 <Text style={styles.loginButtonText}>{Logar.login}</Text>
@@ -159,7 +178,6 @@ export default React.memo(function Login() {
             </View>
           </Animated.View>
 
-          {/* --- FOOTER --- */}
           <View style={styles.footer}>
             <Image source={require("../../assets/images/mao.png")} style={styles.handImage} />
             <View style={styles.signupContainer}>
@@ -175,7 +193,6 @@ export default React.memo(function Login() {
   );
 });
 
-// Seus estilos permanecem os mesmos
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -203,7 +220,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    justifyContent: 'space-around', // Distribui o espaço de forma mais equilibrada
+    justifyContent: 'space-around',
     paddingHorizontal: '8%',
   },
   header: {
@@ -253,33 +270,34 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     opacity: 0.9,
   },
+  // --- INÍCIO DA CORREÇÃO DOS ESTILOS ---
+  inputClipWrapper: {
+    borderRadius: 15,
+    // paddingHorizontal: 15,
+
+    overflow: 'hidden', // Esta é a "mágica" para cortar o fundo amarelo
+  },
   input: {
     backgroundColor: 'rgba(16, 16, 16, 0.2)',
     color: Colors.WHITE,
     paddingHorizontal: 15,
     fontSize: 14,
-    borderRadius: 10,
     fontFamily: "Montserrat",
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     height: 55,
   },
-  passwordWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 16, 16, 0.2)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    height: 55,
-  },
+  // passwordWrapper foi removido, pois o estilo agora está no `input` e `inputClipWrapper`
   inputInner: {
     flex: 1,
     color: Colors.WHITE,
     paddingHorizontal: 15,
+    height: '100%', // Garante que o campo de texto ocupe toda a altura
     fontSize: 14,
     fontFamily: "Montserrat",
+
   },
+  // --- FIM DA CORREÇÃO DOS ESTILOS ---
   eyeButton: {
     height: 55,
     width: 55,
@@ -289,6 +307,7 @@ const styles = StyleSheet.create({
   eyeIcon: {
     fontSize: 20,
     color: Colors.GRAY,
+
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',

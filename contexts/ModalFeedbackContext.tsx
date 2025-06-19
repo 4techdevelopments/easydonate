@@ -1,25 +1,36 @@
+// contexts/ModalFeedbackContext.tsx
+
 import { ModalFeedback } from '@/components/ModalFeedback';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
-// Definindo o formato do nosso contexto
+// --- INTERFACE ATUALIZADA ---
+// A função agora declara que pode receber um 'title' opcional.
 interface ModalContextType {
-    mostrarModalFeedback: (message: string, type: 'success' | 'error', duration?: number) => void;
+    mostrarModalFeedback: (message: string, type: 'success' | 'error', duration?: number, title?: string) => void;
 }
 
 const ModalFeedbackContext = createContext<ModalContextType | undefined>(undefined);
 
-// O Provider é quem vai "abraçar" nosso app e fornecer o modal
 export const ModalFeedbackProvider = ({ children }: { children: ReactNode }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [message, setMessage] = useState('');
     const [type, setType] = useState<'success' | 'error'>('success');
+    // --- NOVO ESTADO PARA O TÍTULO ---
+    const [title, setTitle] = useState<string | undefined>(undefined);
 
-    const mostrarModalFeedback = (msg: string, feedbackType: 'success' | 'error', duration: number = 2100) => { // espera 2.1 segundos para  fechar automaticamente
+    const mostrarModalFeedback = (
+        msg: string, 
+        feedbackType: 'success' | 'error', 
+        duration: number = 2100,
+        // O novo parâmetro 'customTitle' é recebido aqui
+        customTitle?: string 
+    ) => {
         setMessage(msg);
         setType(feedbackType);
+        // O estado do título é atualizado com o valor recebido
+        setTitle(customTitle); 
         setIsVisible(true);
 
-        // Se for sucesso, fecha automaticamente depois de um tempo
         if (feedbackType === 'success') {
             setTimeout(() => {
                 setIsVisible(false);
@@ -38,13 +49,14 @@ export const ModalFeedbackProvider = ({ children }: { children: ReactNode }) => 
                 isVisible={isVisible}
                 type={type}
                 message={message}
+                // O estado do título é passado como prop para o componente do modal
+                title={title}
                 onClose={hideModal}
             />
         </ModalFeedbackContext.Provider>
     );
 };
 
-// O Hook é a forma fácil de usar o nosso contexto nas telas
 export const useModalFeedback = () => {
     const context = useContext(ModalFeedbackContext);
     if (context === undefined) {

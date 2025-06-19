@@ -7,11 +7,13 @@ import Modal from 'react-native-modal';
 
 import Colors from './Colors';
 
+// --- INTERFACE ATUALIZADA ---
 interface ModalFeedbackProps {
     isVisible: boolean;
     type: 'success' | 'error';
     message: string;
     onClose: () => void;
+    title?: string; // 1. Adicionada a nova propriedade opcional 'title'
 }
 
 const successImage = require('@/assets/images/mao-black.webp');
@@ -19,10 +21,12 @@ const errorImage = require('@/assets/images/mao-black-only.webp');
 const successAnimation = { uri: "https://lottie.host/280b81e2-abb1-4e4d-ac5a-3067e6af2b09/DMsBmUq7EY.lottie" };
 const errorAnimation = { uri: "https://lottie.host/aae5ce59-c8ee-4ca1-9dd7-6101965c9e71/LFGW2D0vie.lottie" };
 
-export function ModalFeedback({ isVisible, type, message, onClose }: ModalFeedbackProps) {
+// 2. O componente agora recebe a nova prop 'title'
+export function ModalFeedback({ isVisible, type, message, onClose, title }: ModalFeedbackProps) {
     const isSuccess = type === 'success';
 
-    const title = isSuccess ? 'Sucesso!' : 'Erro!';
+    // 3. Lógica do título atualizada: usa o título customizado se ele existir, senão usa o padrão.
+    const finalTitle = title || (isSuccess ? 'Sucesso!' : 'Erro!');
     const imageSource = isSuccess ? successImage : errorImage;
     const animationSource = isSuccess ? successAnimation : errorAnimation;
 
@@ -35,19 +39,13 @@ export function ModalFeedback({ isVisible, type, message, onClose }: ModalFeedba
             onBackButtonPress={onClose}
         >
             <View style={styles.modalContainer}>
-
-                {/* --- ESTRUTURA VISUAL CORRIGIDA --- */}
-                {/* Este container agora empilha os itens verticalmente */}
                 <View style={styles.animationWrapper}>
-                    {/* 1. A Animação Lottie vem primeiro */}
                     <LottieView
                         source={animationSource}
                         autoPlay
-                        // O loop só acontece no sucesso, para o coração quebrado não ficar se repetindo
                         loop={isSuccess}
                         style={isSuccess ? styles.lottieSuccess : styles.lottieError}
                     />
-                    {/* 2. A imagem da mão vem depois, ficando embaixo da animação */}
                     <Image
                         source={imageSource}
                         style={styles.handImage}
@@ -55,15 +53,15 @@ export function ModalFeedback({ isVisible, type, message, onClose }: ModalFeedba
                     />
                 </View>
 
+                {/* 4. Usando o título final (customizado ou padrão) */}
                 <Text style={[styles.title, { color: Colors.ORANGE }]}>
-                    {title}
+                    {finalTitle}
                 </Text>
 
                 <Text style={styles.message}>
                     {message}
                 </Text>
 
-                {/* O botão fica no final, apenas no caso de erro */}
                 {!isSuccess && (
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Text style={styles.closeButtonText}>Entendi</Text>
@@ -74,7 +72,7 @@ export function ModalFeedback({ isVisible, type, message, onClose }: ModalFeedba
     );
 }
 
-// --- ESTILOS CORRIGIDOS E OTIMIZADOS ---
+// Seus estilos permanecem os mesmos
 const styles = StyleSheet.create({
     modalContainer: {
         backgroundColor: Colors.WHITE,
@@ -84,7 +82,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     animationWrapper: {
-        // Este container não precisa de altura fixa, ele se ajusta ao conteúdo
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -109,13 +106,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontFamily: 'Montserrat-Bold',
-        marginBottom: 8, // Espaçamento reduzido
+        marginBottom: 8,
     },
     message: {
         fontSize: 14,
         fontFamily: 'Montserrat',
         textAlign: 'center',
-        marginBottom: 20, // Espaçamento reduzido
+        marginBottom: 20,
         color: Colors.BLACK,
         paddingHorizontal: 10,
     },
