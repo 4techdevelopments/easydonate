@@ -93,7 +93,9 @@ export default React.memo(function CadastroTeste() {
 
                 {/* 1. HEADER Fixo no Topo */}
                 <View style={styles.header}>
-                    
+                    <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+                        <Feather name="arrow-left" style={styles.backIcon} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* 2. SCROLLVIEW ocupa o espaço do meio */}
