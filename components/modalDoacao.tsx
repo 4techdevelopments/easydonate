@@ -87,16 +87,21 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
         if (!ong.telefoneCelular) {
-            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error');
+            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error', 2100, 'Doação Cancelada!');
             return;
         }
 
         Linking.canOpenURL(url)
             .then((supported) => {
                 if (supported) {
-                    return Linking.openURL(url);
+                    Linking.openURL(url);
+                    handleClose();
+                    setTimeout(() => {
+                        mostrarModalFeedback("Doação cadastrada com sucesso!", "success", 2500);
+                    }, 5000);
                 } else {
-                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error');
+                    handleClose();
+                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error', 2100, 'Doação Cancelada!');
                 }
             })
             .catch((err) => console.warn("Erro: ", err));
@@ -128,16 +133,21 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
         const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
         if (!ong.telefoneCelular) {
-            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error');
+            mostrarModalFeedback("A ONG não possui WhatsApp!", 'error', 2100, 'Doação Cancelada');
             return;
         }
 
         Linking.canOpenURL(url)
             .then((supported) => {
                 if (supported) {
-                    return Linking.openURL(url);
+                    Linking.openURL(url);
+                    handleClose();
+                    setTimeout(() => {
+                        mostrarModalFeedback("Doação cadastrada com sucesso!", "success", 2500);
+                    }, 5000);
                 } else {
-                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error');
+                    handleClose();
+                    mostrarModalFeedback("Por favor, instale o WhatsApp para enviar a mensagem", 'error', 2100, 'Doação Cancelada!');
                 }
             })
             .catch((err) => console.warn("Erro: ", err));
@@ -237,13 +247,10 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                     const response = await api.post('/Doacao', bodyRequestDoacao);
 
                     if (response.status === 201) {
-                        handleClose();
-                        mostrarModalFeedback("Doação cadastrada com sucesso!", 'success');
-                        setTimeout(() => {
-                            sendZap();
-                        }, 2100)
+                        sendZap();
                         return;
                     }
+
                 } catch (error: any) {
                     console.warn("Erro ao cadastrar doação: ", error);
 
@@ -333,11 +340,7 @@ export default function ModalDoacao({ visible, onClose, ong }: ModalDoacaoProps)
                     const response = await api.post('/Doacao', bodyRequestDoacao);
 
                     if (response.status === 201) {
-                        handleClose();
-                        mostrarModalFeedback("Doação realizada com sucesso!", 'success');
-                        setTimeout(() => {
-                            sendZapColeta();
-                        }, 2100)
+                        sendZapColeta();
                         return;
                     }
                 } catch (error: any) {
