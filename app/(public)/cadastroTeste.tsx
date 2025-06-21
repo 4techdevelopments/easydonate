@@ -7,12 +7,12 @@ import EasyDonateSvg from "@/components/easyDonateSvg";
 import PasswordInput from "@/components/PasswordInput";
 import RadioSelector from "@/components/radioGroup";
 import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
-import { Entypo, Feather, FontAwesome } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
@@ -165,6 +165,7 @@ export default React.memo(function CadastroTeste() {
 
         buscarCep();
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cep, cepDoador, selectedOption]);
 
     const resetCamposDoador = () => {
@@ -322,7 +323,7 @@ export default React.memo(function CadastroTeste() {
         }
 
         if (senhaDoador !== senhaDoador2) {
-           mostrarModalFeedback("As senhas não coincidem!", 'error', undefined, "Você digitou a mesma senha?");
+            mostrarModalFeedback("As senhas não coincidem!", 'error', undefined, "Você digitou a mesma senha?");
             return;
         }
 
@@ -739,33 +740,12 @@ export default React.memo(function CadastroTeste() {
                                                     }}
                                                 />
 
-
-
-
-                                                {/* <View style={styles.passwordContainer}>
-                                                    <CustomInput
-                                                        label="Senha*"
-                                                        inputProps={{
-                                                            placeholder: "Digite sua senha",
-                                                            maxLength: 128,
-                                                            value: senhaDoador,
-                                                            onChangeText: setSenhaDoador,
-                                                            keyboardType: "default",
-                                                            textContentType: "password",
-                                                            secureTextEntry: !senhasVisiveis[0],
-                                                        }}
-                                                    />
-                                                    <TouchableOpacity onPress={() => alternarVisibilidadeSenha(0)} style={styles.eyeButton}>
-                                                        <Entypo name={senhasVisiveis[0] ? "eye-with-line" : "eye"} size={20} color={senhasVisiveis[0] ? Colors.GRAY : Colors.ORANGE} />
-                                                    </TouchableOpacity>
-                                                </View> */}
-
                                                 <PasswordInput
                                                     label="Senha*"
                                                     isPasswordVisible={senhasVisiveis[0]}
                                                     onToggleVisibility={() => alternarVisibilidadeSenha(0)}
                                                     inputProps={{
-                                                        placeholder: "Digite sua senha",
+                                                        placeholder: "Crie sua senha de acesso",
                                                         value: senhaDoador,
                                                         onChangeText: setSenhaDoador,
                                                         textContentType: "password"
@@ -784,25 +764,6 @@ export default React.memo(function CadastroTeste() {
                                                     }}
                                                 />
 
-                                                {/* <View style={styles.passwordContainer}>
-                                                    <CustomInput
-                                                        label="Confirme sua Senha*"
-                                                        inputProps={{
-                                                            placeholder: "Confirme sua senha",
-                                                            maxLength: 128,
-                                                            value: senhaDoador2,
-                                                            onChangeText: setSenhaDoador2,
-                                                            keyboardType: "default",
-                                                            textContentType: "password",
-                                                            secureTextEntry: !senhasVisiveis[1],
-                                                        }}
-                                                    />
-                                                    <TouchableOpacity onPress={() => alternarVisibilidadeSenha(1)} style={styles.eyeButton}>
-                                                        <Entypo name={senhasVisiveis[1] ? "eye-with-line" : "eye"} size={20} color={senhasVisiveis[1] ? Colors.GRAY : Colors.ORANGE} />
-                                                    </TouchableOpacity>
-                                                </View> */}
-
-
                                             </View>
                                         </ScrollView>
                                     )}
@@ -814,230 +775,202 @@ export default React.memo(function CadastroTeste() {
                                             nestedScrollEnabled={true}
                                         >
                                             <View style={styles.formContent}>
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>ONG*</Text>
-                                                    <TextInput
-                                                        placeholder="Nome da organização"
-                                                        maxLength={255}
-                                                        value={nome}
-                                                        onChangeText={setNome}
-                                                        keyboardType="default"
-                                                        textContentType="name"
-                                                        style={styles.input}
+                                                <CustomInput
+                                                    label="Nome da ONG*"
+                                                    inputProps={{
+                                                        placeholder: "Nome da organização",
+                                                        maxLength: 255,
+                                                        value: nome,
+                                                        onChangeText: setNome,
+                                                        keyboardType: "default",
+                                                        textContentType: "organizationName"
+                                                    }}
+                                                />
+
+                                                <CustomInput
+                                                    label="CNPJ*"
+                                                    inputProps={{
+                                                        placeholder: "00.000.000/0000-00",
+                                                        maxLength: 14,
+                                                        value: cnpj,
+                                                        onChangeText: setCnpj,
+                                                        keyboardType: "number-pad"
+                                                    }}
+                                                />
+
+                                                <Dropdown
+                                                    label="Principal tipo de doação que busca*"
+                                                    data={[
+                                                        { value: "Roupas", label: "Roupas" },
+                                                        { value: "Dinheiro", label: "Dinheiro" },
+                                                        { value: "Alimentos", label: "Alimentos / Ração" },
+                                                        { value: "Geral", label: "Abrange qualquer tipo" }
+                                                    ]}
+                                                    onChange={(item) => setTipoAtividade(item.value)}
+                                                    placeholder="Selecione..."
+                                                />
+
+                                                <CustomInput
+                                                    label="CEP*"
+                                                    inputProps={{
+                                                        placeholder: "00000-000",
+                                                        maxLength: 8,
+                                                        value: cep,
+                                                        onChangeText: setCep,
+                                                        keyboardType: "number-pad"
+                                                    }}
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Endereço*"
+                                                        containerStyle={{ width: "75%" }}
+                                                        inputProps={{
+                                                            placeholder: "Rua, Av...",
+                                                            value: rua,
+                                                            onChangeText: setRua,
+                                                            keyboardType: "default"
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Número"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "Nº",
+                                                            value: numero,
+                                                            onChangeText: setNumero,
+                                                            keyboardType: "number-pad"
+                                                        }}
                                                     />
                                                 </View>
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>CNPJ*</Text>
-                                                    <TextInput
-                                                        placeholder="00.000.000/0000-00"
-                                                        maxLength={14}
-                                                        value={cnpj}
-                                                        onChangeText={setCnpj}
-                                                        keyboardType="number-pad"
-                                                        style={styles.input}
+                                                <CustomInput
+                                                    label="Complemento"
+                                                    inputProps={{
+                                                        placeholder: "Apto, bloco, etc.",
+                                                        value: complemento,
+                                                        onChangeText: setComplemento,
+                                                        keyboardType: "default"
+                                                    }}
+                                                />
+
+                                                <CustomInput
+                                                    label="Bairro*"
+                                                    inputProps={{
+                                                        placeholder: "Seu bairro",
+                                                        value: bairro,
+                                                        onChangeText: setBairro,
+                                                        keyboardType: "default"
+                                                    }}
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Cidade*"
+                                                        containerStyle={{ width: "75%" }}
+                                                        inputProps={{
+                                                            placeholder: "Sua cidade",
+                                                            value: cidade,
+                                                            onChangeText: setCidade,
+                                                            keyboardType: "default"
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Estado*"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "UF",
+                                                            value: estado,
+                                                            onChangeText: setEstado,
+                                                            autoCapitalize: "characters",
+                                                            maxLength: 2
+                                                        }}
                                                     />
                                                 </View>
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Tipo Doação*</Text>
-                                                    <Dropdown
-                                                        data={[
-                                                            { value: "Roupas", label: "Roupas" },
-                                                            { value: "Dinheiro", label: "Dinheiro" },
-                                                            { value: "Alimentos", label: "Alimentos / Ração" },
-                                                            { value: "Geral", label: "Abrange qualquer tipo de doação" }
-                                                        ]}
-                                                        onChange={(item) => setTipoAtividade(item.value)}
-                                                        placeholder="Selecione..."
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="DDD*"
+                                                        containerStyle={{ width: "16%" }}
+                                                        inputProps={{
+                                                            placeholder: "00",
+                                                            value: ddd,
+                                                            onChangeText: setDdd,
+                                                            keyboardType: "number-pad",
+                                                            maxLength: 2
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Telefone*"
+                                                        containerStyle={{ width: "79%" }}
+                                                        inputProps={{
+                                                            placeholder: "00000-0000",
+                                                            value: numeroTel,
+                                                            onChangeText: setNumeroTel,
+                                                            keyboardType: "number-pad",
+                                                            maxLength: 9
+                                                        }}
                                                     />
                                                 </View>
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>CEP*</Text>
-                                                    <TextInput
-                                                        placeholder="00000-000"
-                                                        maxLength={8}
-                                                        value={cep}
-                                                        onChangeText={setCep}
-                                                        keyboardType="number-pad"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
+                                                <CustomInput
+                                                    label="Email de Contato*"
+                                                    inputProps={{
+                                                        placeholder: "contato@suaong.com",
+                                                        value: email,
+                                                        onChangeText: setEmail,
+                                                        keyboardType: "email-address",
+                                                        autoCapitalize: "none",
+                                                        autoComplete: "email",
+                                                        textContentType: "emailAddress"
+                                                    }}
+                                                />
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Endereço* / Numero</Text>
-                                                    <View style={styles.rowInputs}>
-                                                        <TextInput
-                                                            placeholder="Endereço"
-                                                            maxLength={255}
-                                                            value={rua}
-                                                            onChangeText={setRua}
-                                                            keyboardType="default"
-                                                            style={[styles.input, styles.inputMedium]}
-                                                        />
-                                                        <TextInput
-                                                            placeholder="Nº"
-                                                            maxLength={10}
-                                                            value={numero}
-                                                            onChangeText={setNumero}
-                                                            keyboardType="number-pad"
-                                                            style={[styles.input, styles.inputSmall]}
-                                                        />
-                                                    </View>
-                                                </View>
+                                                <CustomInput
+                                                    label="Responsável pelo Cadastro*"
+                                                    inputProps={{
+                                                        placeholder: "Nome completo",
+                                                        value: responsavelCadastro,
+                                                        onChangeText: setResponsavelCadastro,
+                                                        keyboardType: "default",
+                                                        textContentType: "name"
+                                                    }}
+                                                />
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Complemento</Text>
-                                                    <TextInput
-                                                        placeholder="Complemento"
-                                                        maxLength={255}
-                                                        value={complemento}
-                                                        onChangeText={setComplemento}
-                                                        keyboardType="default"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
+                                                {/* <CustomInput
+                                                    label="Comprovante de Registro (Opcional)"
+                                                    inputProps={{
+                                                        placeholder: "Link para o comprovante",
+                                                        value: comprovanteRegistro,
+                                                        onChangeText: setComprovanteRegistro,
+                                                        keyboardType: "url"
+                                                    }}
+                                                /> */}
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Bairro*</Text>
-                                                    <TextInput
-                                                        placeholder="Bairro"
-                                                        maxLength={255}
-                                                        value={bairro}
-                                                        onChangeText={setBairro}
-                                                        keyboardType="default"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
+                                                <PasswordInput
+                                                    label="Senha*"
+                                                    isPasswordVisible={senhasVisiveis[3]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(3)}
+                                                    inputProps={{
+                                                        placeholder: "Crie sua senha de acesso",
+                                                        value: senha,
+                                                        onChangeText: setSenha,
+                                                        textContentType: "newPassword"
+                                                    }}
+                                                />
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Cidade* / Estado*</Text>
-                                                    <View style={styles.rowInputs}>
-                                                        <TextInput
-                                                            placeholder="Cidade"
-                                                            maxLength={255}
-                                                            value={cidade}
-                                                            onChangeText={setCidade}
-                                                            keyboardType="default"
-                                                            style={[styles.input, styles.inputMedium]}
-                                                        />
-                                                        <TextInput
-                                                            placeholder="UF"
-                                                            maxLength={2}
-                                                            value={estado}
-                                                            onChangeText={setEstado}
-                                                            keyboardType="default"
-                                                            style={[styles.input, styles.inputSmall]}
-                                                        />
-                                                    </View>
-                                                </View>
+                                                <PasswordInput
+                                                    label="Confirme sua Senha*"
+                                                    isPasswordVisible={senhasVisiveis[4]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(4)}
+                                                    inputProps={{
+                                                        placeholder: "Repita a senha criada",
+                                                        value: senha2,
+                                                        onChangeText: setSenha2,
+                                                        textContentType: "newPassword"
+                                                    }}
+                                                />
 
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>DDD* / Telefone*</Text>
-                                                    <View style={styles.rowInputs}>
-                                                        <TextInput
-                                                            placeholder="DDD"
-                                                            maxLength={2}
-                                                            value={ddd}
-                                                            onChangeText={setDdd}
-                                                            keyboardType="number-pad"
-                                                            style={[styles.input, styles.inputDdd]}
-                                                        />
-                                                        <TextInput
-                                                            placeholder="000000000"
-                                                            maxLength={9}
-                                                            value={numeroTel}
-                                                            onChangeText={setNumeroTel}
-                                                            keyboardType="number-pad"
-                                                            style={[styles.input, styles.inputTel]}
-                                                        />
-                                                    </View>
-                                                </View>
-
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Email*</Text>
-                                                    <TextInput
-                                                        placeholder="Email"
-                                                        maxLength={255}
-                                                        value={email}
-                                                        onChangeText={setEmail}
-                                                        keyboardType="email-address"
-                                                        textContentType="emailAddress"
-                                                        autoComplete="email"
-                                                        autoCapitalize="none"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
-
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Responsável*</Text>
-                                                    <TextInput
-                                                        placeholder="Nome completo do responsável"
-                                                        maxLength={255}
-                                                        value={responsavelCadastro}
-                                                        onChangeText={setResponsavelCadastro}
-                                                        keyboardType="default"
-                                                        textContentType="name"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
-
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Comprovante de Registro</Text>
-                                                    <TextInput
-                                                        placeholder="Comprovante de registro"
-                                                        maxLength={255}
-                                                        value={comprovanteRegistro}
-                                                        onChangeText={setComprovanteRegistro}
-                                                        keyboardType="default"
-                                                        style={styles.input}
-                                                    />
-                                                </View>
-
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Senha*</Text>
-                                                    <View style={styles.passwordContainer}>
-                                                        <TextInput
-                                                            placeholder="Digite sua senha"
-                                                            maxLength={128}
-                                                            value={senha}
-                                                            onChangeText={setSenha}
-                                                            keyboardType="default"
-                                                            textContentType="password"
-                                                            secureTextEntry={!senhasVisiveis[3]}
-                                                            style={styles.passwordInput}
-                                                        />
-                                                        <TouchableOpacity onPress={() => alternarVisibilidadeSenha(3)} style={styles.eyeButton}>
-                                                            <Entypo
-                                                                name={senhasVisiveis[3] ? "eye-with-line" : "eye"}
-                                                                style={styles.eyeIcon}
-                                                            />
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                </View>
-
-                                                <View style={styles.inputContainer}>
-                                                    <Text style={styles.label}>Repita a Senha*</Text>
-                                                    <View style={styles.passwordContainer}>
-                                                        <TextInput
-                                                            placeholder="Repita sua senha"
-                                                            maxLength={128}
-                                                            value={senha2}
-                                                            onChangeText={setSenha2}
-                                                            keyboardType="default"
-                                                            textContentType="password"
-                                                            secureTextEntry={!senhasVisiveis[4]}
-                                                            style={styles.passwordInput}
-                                                        />
-                                                        <TouchableOpacity onPress={() => alternarVisibilidadeSenha(4)} style={styles.eyeButton}>
-                                                            <Entypo
-                                                                name={senhasVisiveis[4] ? "eye-with-line" : "eye"}
-                                                                style={styles.eyeIcon}
-                                                            />
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                </View>
                                             </View>
                                         </ScrollView>
                                     )}
@@ -1190,9 +1123,6 @@ const styles = StyleSheet.create({
     formScrollView: {
         maxHeight: 350, // Altura que mostra aproximadamente 5 campos de input
         width: '100%',
-    },
-    inputContainer: {
-        // marginBottom: 15,
     },
     label: {
         color: Colors.WHITE,
