@@ -157,7 +157,7 @@ export default function Cadastro() {
         };
 
         buscarCep();
-    }, [cep, cepDoador, selectedOption]);
+    }, [cep, cepDoador, selectedOption, mostrarModalFeedback]);
 
     const resetCamposDoador = () => {
         setEmailDoador('');
