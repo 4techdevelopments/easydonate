@@ -69,8 +69,9 @@ export default function Index() {
               <TouchableOpacity style={styles.BtnCadastro} onPress={() => router.navigate('/(public)/cadastro')}>
                 <Text style={styles.BtnTextCadastro}>{Inicio.cadastro}</Text>
               </TouchableOpacity>
+
               <TouchableOpacity style={styles.BtnCadastro} onPress={() => router.navigate('/(public)/cadastroTeste')}>
-                <Text style={styles.BtnTextCadastro}>CADASTRO TESTE</Text>
+                <Text style={styles.BtnTextCadastro}>Cadastre-se</Text>
               </TouchableOpacity>
 
               <Text style={styles.P}>{Inicio.transformar_generosidade}</Text>
@@ -169,12 +170,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 30
   },
+ 
   BtnTextCadastro: {
     textAlign: "center",
     color: Colors.ORANGE,
     fontSize: 17,
     fontFamily: "Montserrat-Medium",
   },
+ 
   P: {
     textAlign: "center",
     color: Colors.WHITE,
