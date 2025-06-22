@@ -14,7 +14,7 @@ import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pres
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
-export default React.memo(function CadastroTeste() {
+export default React.memo(function Cadastro() {
     const router = useRouter();
 
     // --- CÉREBRO DO FLUXO ---
@@ -163,7 +163,7 @@ export default React.memo(function CadastroTeste() {
 
         buscarCep();
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cep, cepDoador, selectedOption]);
 
     const resetCamposDoador = () => {

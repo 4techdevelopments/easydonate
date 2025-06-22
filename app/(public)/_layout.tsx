@@ -15,10 +15,6 @@ export default function PublicLayout() {
         name="cadastro"
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="cadastroTeste"
-        options={{ headerShown: false }}
-      />
     </Stack>
   )
 }
