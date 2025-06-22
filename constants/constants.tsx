@@ -11,7 +11,7 @@ export const Logar = {
     estamos_felizes: "Estamos muito felizes em te ver novamente!",
     esqueceu_senha: "Esqueceu sua senha?",
     login: "Login",
-    sem_conta: "Não tem uma conta ainda?",
+    sem_conta: "Não tem uma conta?",
     fazer_cadastro: "Faça seu cadastro!",
 }
 export const Cadastrar = {

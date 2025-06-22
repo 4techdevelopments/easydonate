@@ -408,7 +408,7 @@ export default React.memo(function Cadastro() {
                 Animated.timing(translateY, {
                     toValue: -75,
                     duration: 500,
-                    easing: Easing.out(Easing.ease),
+                    easing: Easing.bezier(0.34, 1.56, 0.64, 1),
                     useNativeDriver: true,
                 }).start();
             }
@@ -418,7 +418,7 @@ export default React.memo(function Cadastro() {
             Animated.timing(translateY, {
                 toValue: 0,
                 duration: 500,
-                easing: Easing.out(Easing.ease),
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1), 
                 useNativeDriver: true,
             }).start();
         });
@@ -465,7 +465,7 @@ export default React.memo(function Cadastro() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
                 <Image
-                    source={require("../../assets/images/bg-new.png")}
+                    source={require("../../assets/images/bg-tela-cadastro.png")}
                     style={styles.bgImage}
                 />
 
@@ -986,7 +986,7 @@ export default React.memo(function Cadastro() {
                         <Image source={require("../../assets/images/mao.png")} style={styles.handImage} />
                         <View style={styles.signupContainer}>
                             <Text style={styles.signupText}>Já tem uma conta?</Text>
-                            <TouchableOpacity onPress={() => router.navigate('/(public)/login')}>
+                            <TouchableOpacity onPress={() => router.replace('/(public)/login')}>
                                 <Text style={styles.signupLink}>Faça seu login!</Text>
                             </TouchableOpacity>
                         </View>
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         position: 'relative',
-        backgroundColor: 'rgba(10, 10, 10, 0.65)',
+        backgroundColor: 'rgba(12, 12, 12, 0.65)',
     },
     loadingContainer: {
         flex: 1,
@@ -1026,14 +1026,14 @@ const styles = StyleSheet.create({
     },
 
     header: {
-        paddingTop: 20,
+        paddingTop: 30,
         paddingHorizontal: '8%',
     },
     backButton: {
         width: 45,
         height: 45,
         borderRadius: 23,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(116, 116, 116, 0.22)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1081,8 +1081,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         alignItems: 'center',
-        paddingBottom: 20,
-        // paddingTop: 10,
+        paddingBottom: 30,
         paddingHorizontal: '8%',
     },
     handImage: {

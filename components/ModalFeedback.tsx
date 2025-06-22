@@ -26,7 +26,7 @@ export function ModalFeedback({ isVisible, type, message, onClose, title }: Moda
     const isSuccess = type === 'success';
 
     // 3. Lógica do título atualizada: usa o título customizado se ele existir, senão usa o padrão.
-    const finalTitle = title || (isSuccess ? 'Sucesso!' : 'Erro!');
+    const finalTitle = title || (isSuccess ? 'Sucesso!' : 'Ops... Algo deu errado!');
     const imageSource = isSuccess ? successImage : errorImage;
     const animationSource = isSuccess ? successAnimation : errorAnimation;
 
