@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.WHITE,
         color: Colors.BLACK,
         paddingHorizontal: 15,
-        paddingVertical: 12,
+        paddingVertical: 14,
         borderRadius: 5,
         fontFamily: "Montserrat",
         fontSize: 14,
