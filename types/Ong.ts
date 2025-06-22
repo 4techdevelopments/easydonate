@@ -16,4 +16,5 @@ export interface Ong {
   redeSocial?: string;
   site?: string;
   descricaoMissao?: string;
+  logo: string;
 }

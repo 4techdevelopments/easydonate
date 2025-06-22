@@ -6,10 +6,11 @@ import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
 import { useAuth } from '@/routes/AuthContext';
 import PrivateRoute from '@/routes/PrivateRoute';
 import { Ong } from '@/types/Ong';
-import { Entypo } from '@expo/vector-icons';
+import { Entypo, MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OngDetalhes() {
@@ -19,6 +20,7 @@ export default function OngDetalhes() {
     const [ong, setOng] = useState<Ong | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const { mostrarModalFeedback } = useModalFeedback();
 
     const isDono = usuario?.tipoUsuario === 'Ong' && usuario?.idUsuario === ong?.idUsuario;
@@ -109,6 +111,70 @@ export default function OngDetalhes() {
         }
     };
 
+    // [SELECIONAR IMAGEM E SALVAR]
+    const handleImagePick = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (status !== 'granted') {
+            mostrarModalFeedback('É necessário permitir acesso à galeria para selecionar uma imagem.', 'error', undefined, 'Permissão Negada!');
+            return;
+        }
+
+        // Abre a galeria
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        // Se o usuário cancelou, não faz nada
+        if (result.canceled) return;
+
+        const selectedImageUri = result.assets[0].uri;
+
+        // Aqui você pode chamar sua função de upload com a URI
+        handleUpload(selectedImageUri);
+
+        setTimeout(() => {
+            router.push('/(auth)/home');
+        }, 2100);
+    };
+
+    const IMG_BB_API_KEY = "730d4ced756f66548ca8bdc5295b81a0";
+
+    // [UPLOAD LOGO]
+    const handleUpload = async (uri: string) => {
+        try {
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result?.toString().split(",")[1] || "");
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            const formData = new FormData();
+            formData.append("image", base64);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_API_KEY}`, {
+                method: "POST",
+                body: formData,
+            });
+            const uploadData = await res.json();
+            const uploadedUrl = uploadData.data?.url;
+            if (!uploadedUrl) throw new Error("Falha ao obter URL da imagem do ImgBB.");
+            await api.put(`/Upload/Logo/${ong?.idOng}`, {
+                idOng: ong?.idOng,
+                logo: uploadedUrl
+            });
+
+            setLogoUrl(uploadedUrl);
+        } catch (error) {
+            console.warn("Erro no processo de upload:", error);
+            mostrarModalFeedback("Não foi possível enviar sua foto. Tente novamente.", 'error', undefined, 'Erro de Upload!');
+            return;
+        }
+    };
+
     if (loading || !ong) {
         return (
             <View style={styles.Container}>
@@ -139,6 +205,40 @@ export default function OngDetalhes() {
 
                         <View style={styles.Section}>
                             <ScrollView horizontal={false} showsVerticalScrollIndicator={true}>
+
+                                {((isDoador || !isDono) && ong.logo) ? (
+                                    <View style={styles.CardImg}>
+                                        <View style={styles.WrapperImg}>
+                                            {ong?.logo ? (
+                                                <Image
+                                                    source={{ uri: ong.logo }}
+                                                    resizeMode='center'
+                                                    style={styles.OngLogo}
+                                                />
+                                            ) : null}
+                                        </View>
+                                    </View>
+                                ) : null}
+
+                                {isDono && (
+                                    <View style={styles.CardImg}>
+                                        <Pressable style={styles.WrapperImg} onPress={handleImagePick}>
+                                            {ong?.logo ? (
+                                                <Image
+                                                    source={{ uri: logoUrl || ong.logo }}
+                                                    resizeMode='center'
+                                                    style={styles.OngLogo}
+                                                />
+                                            ) : (
+                                                <View style={{ width: "100%", height: "100%", justifyContent: "center", alignContent: "center", borderWidth: 2, borderColor: Colors.ORANGE, borderRadius: 15 }}>
+                                                    <MaterialIcons name='cloud-upload' size={100} color={Colors.ORANGE} style={{ textAlign: "center" }} />
+                                                    <Text style={{ textAlign: "center", fontSize: 17, color: Colors.ORANGE }}>Escolher Imagem</Text>
+                                                </View>
+                                            )}
+                                        </Pressable>
+                                    </View>
+                                )}
+
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.label}>Nome</Text>
                                     <TextInput
@@ -316,6 +416,27 @@ const styles = StyleSheet.create({
         //backgroundColor: "#f00",
         width: "100%",
         height: "60%"
+    },
+    CardImg: {
+        //backgroundColor: "#f00",
+        width: "100%",
+        height: 300,
+        marginBottom: 15,
+        padding: 30,
+        justifyContent: "center",
+        alignContent: "center"
+    },
+    WrapperImg: {
+        //backgroundColor: "#cecece",
+        width: "100%",
+        height: "100%",
+        borderRadius: 10,
+        justifyContent: "center",
+        alignContent: "center"
+    },
+    OngLogo: {
+        width: "100%",
+        height: "100%"
     },
     inputGroup: {
         marginBottom: 15,
