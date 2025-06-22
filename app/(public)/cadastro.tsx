@@ -1,21 +1,25 @@
 import api from "@/api/axios";
+import CustomInput from "@/components/CustomInput";
 import Dropdown from "@/components/dropdown";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import PasswordInput from "@/components/PasswordInput";
 import RadioSelector from "@/components/radioGroup";
-import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
-import { Entypo, FontAwesome } from '@expo/vector-icons';
+import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../../components/Colors";
 
-export default function Cadastro() {
+export default React.memo(function CadastroTeste() {
     const router = useRouter();
 
-    // [MODAL FEEDBACK]
+    // --- CÉREBRO DO FLUXO ---
+    const [etapa, setEtapa] = useState<'selecao' | 'formulario'>('selecao');
+    const [selectedOption, setSelectedOption] = useState<string>('');
     const { mostrarModalFeedback } = useModalFeedback();
 
     // [DOADOR]
@@ -40,6 +44,7 @@ export default function Cadastro() {
     const [estadoDoador, setEstadoDoador] = useState('');
     const [dddDoador, setDddDoador] = useState('');
     const [numeroTelDoador, setNumeroTelDoador] = useState('');
+
     // [ONG]
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
@@ -59,10 +64,10 @@ export default function Cadastro() {
     const [numeroTel, setNumeroTel] = useState('');
     const [responsavelCadastro, setResponsavelCadastro] = useState('');
     const [comprovanteRegistro, setComprovanteRegistro] = useState('');
-    // [ONG / DOADOR]
+
+    // [GERAL]
     const [tipoUsuario, setTipoUsuario] = useState<string>('');
-    // [OPCAO SELECIONADA]
-    const [selectedOption, setSelectedOption] = useState<string>('');
+    const [senhasVisiveis, setSenhasVisiveis] = useState<boolean[]>([false, false, false, false]);
 
     // [DATE TIME]
     const formatDateToDisplay = (date: Date): string => {
@@ -96,7 +101,6 @@ export default function Cadastro() {
         }
     }, [selectedOption]);
 
-
     // [CADASTRO]
     function handleCadastro() {
         if (selectedOption === 'ONG') {
@@ -117,9 +121,10 @@ export default function Cadastro() {
                     const data = await response.json();
 
                     if (data.erro) {
-                        mostrarModalFeedback("CEP não encontrado.", 'error');
+                        mostrarModalFeedback("CEP não encontrado.", 'error', undefined, "Ops! Erro ao buscar seu CEP...");
                         return;
                     }
+
 
                     setRua(data.logradouro || '');
                     setComplemento(data.complemento || '');
@@ -139,7 +144,7 @@ export default function Cadastro() {
                     const data = await response.json();
 
                     if (data.erro) {
-                        mostrarModalFeedback("CEP não encontrado.", 'error');
+                        mostrarModalFeedback("CEP não encontrado.", 'error', undefined, "Ops! Erro ao buscar seu CEP...");
                         return;
                     }
 
@@ -157,7 +162,9 @@ export default function Cadastro() {
         };
 
         buscarCep();
-    }, [cep, cepDoador, selectedOption, mostrarModalFeedback]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cep, cepDoador, selectedOption]);
 
     const resetCamposDoador = () => {
         setEmailDoador('');
@@ -204,49 +211,29 @@ export default function Cadastro() {
     // [CADASTRO ONG]
     const cadastroOng = async () => {
         if (!email || !tipoUsuario || !nome || !cnpj || !tipoAtividade || !cep || !rua || !bairro || !cidade || !estado || !ddd || !numeroTel || !responsavelCadastro || !senha || !senha2) {
-            // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");  
-            mostrarModalFeedback("Preencha todos os campos obrigatórios!", 'error');
+            mostrarModalFeedback("Preencha todos os campos obrigatórios!", 'error', undefined, "Ops! Algo deu errado...");
             return;
         }
 
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(email)) {
             mostrarModalFeedback("Digite um e-mail válido!", 'error');
-            // Alert.alert("Erro", "Digite um e-mail válido!");
             return;
         }
 
         const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
         if (!senhaRegex.test(senha)) {
             mostrarModalFeedback("A senha deve conter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!", 'error');
-            // Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
             return;
         }
 
         if (senha !== senha2) {
-            mostrarModalFeedback("As senhas não coincidem!", 'error');
-            // Alert.alert("Erro", "As senhas não coincidem!");
+            mostrarModalFeedback("As senhas não coincidem!", 'error', undefined, "Ops! Você digitou a mesma senha?");
             return;
         }
 
         let bodyRequestOng: any = {
-            email,
-            senha,
-            tipoUsuario,
-            nome,
-            cnpj,
-            tipoAtividade,
-            descricaoMissao,
-            cep,
-            rua,
-            numero,
-            complemento,
-            bairro,
-            cidade,
-            estado,
-            ddd,
-            responsavelCadastro,
-            comprovanteRegistro,
+            email, senha, tipoUsuario, nome, cnpj, tipoAtividade, descricaoMissao, cep, rua, numero, complemento, bairro, cidade, estado, ddd, responsavelCadastro, comprovanteRegistro,
         };
 
         const telefoneRegex = /^\d{8}$/;
@@ -259,7 +246,6 @@ export default function Cadastro() {
             }
         } else {
             mostrarModalFeedback("Informe um número de telefone/celular válido!", 'error');
-            // Alert.alert("Erro", "Informe um número de telefone/celular válido!");
             return;
         }
 
@@ -296,21 +282,20 @@ export default function Cadastro() {
     // [CADASTRO DOADOR]
     const cadastroDoador = async () => {
         if (!emailDoador || !tipoUsuario || !nomeDoador || !tipoPessoa || !dataNascimento || !cepDoador || !ruaDoador || !bairroDoador || !cidadeDoador || !estadoDoador || !dddDoador || !numeroTelDoador || !senhaDoador || !senhaDoador2) {
-            // Alert.alert("Erro", "Preencha todos os campos obrigatórios!");
-            mostrarModalFeedback("Preencha todos os campos obrigatórios!", 'error');
+            mostrarModalFeedback("Preencha todos os campos obrigatórios!", 'error', undefined, "Ops! Algo deu errado...");
+
             return;
         }
 
         if (tipoPessoa !== "PF" && tipoPessoa !== "PJ" && tipoPessoa !== "pf" && tipoPessoa !== "pj") {
             mostrarModalFeedback("Tipo de Pessoa inválido! Informe PF ou PJ.", 'error');
-            // Alert.alert("Erro", "Tipo de Pessoa Inválido!");
             return;
         }
 
         if (tipoPessoa === "PF") {
             const cpfRegex = /^\d{11}$/;
             if (!cpfRegex.test(cpf)) {
-                mostrarModalFeedback("Digite o cpf corretamente!", 'error');
+                mostrarModalFeedback("Digite o CPF corretamente!", 'error');
                 return;
             }
         }
@@ -318,7 +303,7 @@ export default function Cadastro() {
         if (tipoPessoa === "PJ") {
             const cnpjRegex = /^(?:\d{14}|[A-Za-z0-9]{8}\d{6})$/;
             if (!cnpjRegex.test(cnpjDoador)) {
-                mostrarModalFeedback("Digite o cnpj corretamente!", 'error');
+                mostrarModalFeedback("Digite o CNPJ corretamente!", 'error');
                 return;
             }
         }
@@ -326,19 +311,17 @@ export default function Cadastro() {
         const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(emailDoador)) {
             mostrarModalFeedback("Digite um e-mail válido!", 'error');
-            // Alert.alert("Erro", "Digite um e-mail válido!");
             return;
         }
 
         const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
         if (!senhaRegex.test(senhaDoador)) {
             mostrarModalFeedback("A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!", 'error');
-            // Alert.alert("Erro", "A senha deve ter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!");
             return;
         }
 
         if (senhaDoador !== senhaDoador2) {
-            mostrarModalFeedback("As senhas não coincidem!", 'error');
+            mostrarModalFeedback("As senhas não coincidem!", 'error', undefined, "Você digitou a mesma senha?");
             return;
         }
 
@@ -371,7 +354,6 @@ export default function Cadastro() {
                 bodyRequestDoador.telefone = numeroTelDoador;
             }
         } else {
-            // Alert.alert("Erro", "Informe um número de telefone/celular válido!");
             mostrarModalFeedback("Informe um número de telefone/celular válido!", 'error');
             return;
         }
@@ -384,7 +366,7 @@ export default function Cadastro() {
                 setTimeout(() => {
                     resetCamposDoador();
                     router.replace('/login');
-                }, 2500); // espera 2,5 segundos
+                }, 2500);
             }
 
         } catch (error: any) {
@@ -404,18 +386,7 @@ export default function Cadastro() {
 
             mostrarModalFeedback(msg, 'error');
         }
-
     }
-
-    // [CARREGAR FONTS]
-    const [fontsLoaded] = useFonts({
-        "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
-        "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
-        "Montserrat-Medium": require("../../assets/fonts/Montserrat-Medium.ttf")
-    });
-
-    // [SENHA VISIVEL]
-    const [senhasVisiveis, setSenhasVisiveis] = useState<boolean[]>([false, false, false, false]);
 
     const alternarVisibilidadeSenha = (index: number) => {
         setSenhasVisiveis(prev => {
@@ -425,794 +396,801 @@ export default function Cadastro() {
         });
     };
 
-    // [LOADING ENQUANTO NÃO CARREGA AS FONTES]
+    // --- LÓGICA DE ANIMAÇÃO ---
+    const translateY = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const keyboardShowEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const keyboardHideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const keyboardShowListener = Keyboard.addListener(keyboardShowEvent, () => {
+            if (etapa === 'formulario') {
+                Animated.timing(translateY, {
+                    toValue: -75,
+                    duration: 500,
+                    easing: Easing.out(Easing.ease),
+                    useNativeDriver: true,
+                }).start();
+            }
+        });
+
+        const keyboardHideListener = Keyboard.addListener(keyboardHideEvent, () => {
+            Animated.timing(translateY, {
+                toValue: 0,
+                duration: 500,
+                easing: Easing.out(Easing.ease),
+                useNativeDriver: true,
+            }).start();
+        });
+
+        return () => {
+            keyboardShowListener.remove();
+            keyboardHideListener.remove();
+        };
+    }, [translateY, etapa]);
+
+    const [fontsLoaded] = useFonts({
+        "Montserrat": require("../../assets/fonts/Montserrat-Regular.ttf"),
+        "Montserrat-Medium": require("../../assets/fonts/Montserrat-Medium.ttf"),
+        "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
+    });
+
+    // --- LÓGICA DO BOTÃO DE VOLTAR ---
+    const handleBackPress = () => {
+        if (etapa === 'formulario') {
+            setEtapa('selecao');
+        } else {
+            router.back();
+        }
+    };
+
+    // --- LÓGICA DO BOTÃO "PRÓXIMO" ---
+    const handleNextPress = () => {
+        if (!selectedOption) {
+            mostrarModalFeedback("Por favor, selecione uma opção para continuar.", 'error', undefined, "Atenção!");
+            return;
+        }
+        setEtapa('formulario');
+    };
+
     if (!fontsLoaded) {
         return (
-            <View style={[styles.Container, { backgroundColor: Colors.BG }]}>
+            <View style={styles.loadingContainer}>
                 <EasyDonateSvg />
             </View>
-        )
+        );
     }
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <View style={styles.Container}>
-
-                <Image source={require("../../assets/images/bg-tela-cadastro.png")}
-                    style={styles.Bg}
-                    resizeMode="cover"
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                <Image
+                    source={require("../../assets/images/bg-new.png")}
+                    style={styles.bgImage}
                 />
 
-                <View style={styles.Wrapper}>
-
-                    <View style={styles.Header}>
-                        <TouchableOpacity style={styles.BtnVoltar} onPress={() => router.back()}>
-                            <Entypo name="chevron-left" style={styles.IconVoltar} />
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
+                    style={{ flex: 1 }}
+                >
+                    <View style={styles.header}>
+                        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+                            <Feather name="arrow-left" style={styles.backIcon} />
                         </TouchableOpacity>
+
+
+
                     </View>
 
-                    <View style={styles.Section}>
-                        <View style={styles.WrapperCadastro}>
-                            <Text style={styles.H1}>Vamos começar!</Text>
-                            <Text style={styles.P}>Escolha uma opção:</Text>
+                    <ScrollView
+                        contentContainerStyle={[
+                            styles.scrollViewContent,
+                            { justifyContent: 'center' } // AQUI A MUDANÇA: Centraliza para ambas as etapas
+                        ]}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <Animated.View style={[styles.section, { transform: [{ translateY }] }]}>
 
-                            <RadioSelector
-                                options={['Doador', 'ONG']}
-                                selectedOption={selectedOption}
-                                onSelect={setSelectedOption}
-                            />
+                            {etapa === 'selecao' && (
+                                <>
 
-                            <View style={styles.DivCadastroAll}>
-                                {selectedOption === "Doador" && (
-                                    <ScrollView horizontal={false} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
+                                    <Text style={styles.h1}>Vamos começar!</Text>
+                                    <Text style={styles.h2}>Selecione como você deseja participar:</Text>
+                                    <RadioSelector
+                                        options={['Doador', 'ONG']}
+                                        selectedOption={selectedOption}
+                                        onSelect={setSelectedOption}
+                                    />
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleNextPress}>
+                                        <Text style={styles.actionButtonText}>Próximo</Text>
+                                        <Feather name="arrow-right" style={styles.backIcon} />
+                                    </TouchableOpacity>
+                                </>
+                            )}
 
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Tipo Doador*</Text>
-                                            <Dropdown
-                                                data={[
-                                                    { value: "PF", label: "Pessoa Física" },
-                                                    { value: "PJ", label: "Pessoa Jurídica" }
-                                                ]}
-                                                onChange={(item) => setTipoPessoa(item.value)}
-                                                placeholder="Selecione..."
-                                            />
-                                        </View>
+                            {etapa === 'formulario' && (
 
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Nome Completo*</Text>
-                                            <TextInput
-                                                placeholder="Nome completo"
-                                                maxLength={255}
-                                                value={nomeDoador}
-                                                onChangeText={setNomeDoador}
-                                                keyboardType="default"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Nome Social</Text>
-                                            <TextInput
-                                                placeholder="Nome social"
-                                                maxLength={255}
-                                                value={nomeSocial}
-                                                onChangeText={setNomeSocial}
-                                                keyboardType="default"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
+                                <View style={styles.formContainer}>
+                                    {/* <Text style={styles.formTitle}>Participar como {selectedOption}</Text> */}
 
-                                        {tipoPessoa === "PF" && (
-                                            <View style={styles.DivCadastro}>
-                                                <Text style={styles.Labels}>CPF*</Text>
-                                                <TextInput
-                                                    placeholder="000.000.000-00"
-                                                    maxLength={11}
-                                                    value={cpf}
-                                                    onChangeText={setCpf}
-                                                    keyboardType="number-pad"
-                                                    style={styles.Input}
+
+                                    {selectedOption === "Doador" && (
+                                        <ScrollView
+                                            style={styles.formScrollView}
+                                            showsVerticalScrollIndicator={false}
+                                            nestedScrollEnabled={true}
+                                        >
+
+                                            <View style={styles.formContent}>
+                                                <Dropdown
+                                                    label="Tipo Doador*"
+                                                    data={[
+                                                        { value: "PF", label: "Pessoa Física" },
+                                                        { value: "PJ", label: "Pessoa Jurídica" }
+                                                    ]}
+                                                    onChange={(item) => setTipoPessoa(item.value)}
+                                                    placeholder="Selecione..."
                                                 />
+
+
+                                                <CustomInput
+                                                    label="Nome Completo*"
+                                                    inputProps={{
+                                                        placeholder: "Nome completo",
+                                                        maxLength: 255,
+                                                        value: nomeDoador,
+                                                        onChangeText: setNomeDoador,
+                                                        keyboardType: "default",
+                                                        textContentType: "name"
+                                                    }}
+                                                />
+
+                                                <CustomInput
+                                                    label="Nome Social"
+                                                    inputProps={{
+                                                        placeholder: "Nome Social",
+                                                        maxLength: 255,
+                                                        value: nomeSocial,
+                                                        onChangeText: setNomeSocial,
+                                                        keyboardType: "default",
+                                                        textContentType: "name"
+                                                    }}
+                                                />
+
+                                                {tipoPessoa === "PF" && (
+                                                    <CustomInput
+                                                        label="CPF*"
+                                                        inputProps={{
+                                                            placeholder: "000.000.000-00",
+                                                            maxLength: 11,
+                                                            value: cpf,
+                                                            onChangeText: setCpf,
+                                                            keyboardType: "number-pad",
+                                                            textContentType: "none"
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {tipoPessoa === "PJ" && (
+                                                    <CustomInput
+                                                        label="CNPJ*"
+                                                        inputProps={{
+                                                            placeholder: "00.000.000/0000-00",
+                                                            maxLength: 14,
+                                                            value: cnpjDoador,
+                                                            onChangeText: setCnpjDoador,
+                                                            keyboardType: "number-pad",
+                                                            textContentType: "none"
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Para o campo de Data de Nascimento, a estrutura também é atualizada */}
+                                                <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowDatePicker(true)}>
+                                                    <CustomInput
+                                                        label="Data de nascimento*"
+                                                        inputProps={{
+                                                            placeholder: "00/00/0000",
+                                                            maxLength: 10,
+                                                            value: dataNascimento,
+                                                            editable: false
+                                                        }}
+                                                    />
+                                                    <Pressable onPress={() => setShowDatePicker(true)} style={styles.calendarButton}>
+                                                        <FontAwesome name="calendar" size={22} color={Colors.ORANGE} />
+                                                    </Pressable>
+                                                </TouchableOpacity>
+
+                                                {showDatePicker && (
+                                                    <DateTimePicker
+                                                        value={selectedDate || new Date(2000, 0, 1)}
+                                                        mode="date"
+                                                        display="default"
+                                                        maximumDate={new Date()}
+                                                        onChange={handleDateChange}
+                                                    />
+                                                )}
+
+                                                <CustomInput
+                                                    label="CEP*"
+                                                    inputProps={{
+                                                        placeholder: "00000-000",
+                                                        maxLength: 8,
+                                                        value: cepDoador,
+                                                        onChangeText: setCepDoador,
+                                                        keyboardType: "number-pad"
+                                                    }}
+
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Endereço*"
+                                                        // A 'prop' de estilo do container agora tem um nome específico
+                                                        containerStyle={{ width: "75%" }}
+                                                        // Todas as props do TextInput vão dentro de 'inputProps'
+                                                        inputProps={{
+                                                            placeholder: "Endereço",
+                                                            maxLength: 255,
+                                                            value: ruaDoador,
+                                                            onChangeText: setRuaDoador,
+                                                            keyboardType: "default",
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Número"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "Nº",
+                                                            maxLength: 10,
+                                                            value: numeroDoador,
+                                                            onChangeText: setNumeroDoador,
+                                                            keyboardType: "number-pad",
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <CustomInput
+                                                    label="Complemento"
+                                                    inputProps={{
+                                                        placeholder: "Complemento",
+                                                        maxLength: 255,
+                                                        value: complementoDoador,
+                                                        onChangeText: setComplementoDoador,
+                                                        keyboardType: "number-pad"
+                                                    }}
+
+                                                />
+                                                <CustomInput
+                                                    label="Bairro"
+                                                    inputProps={{
+                                                        placeholder: "Bairro",
+                                                        maxLength: 255,
+                                                        value: bairroDoador,
+                                                        onChangeText: setBairroDoador,
+                                                        keyboardType: "default"
+                                                    }}
+
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Cidade*"
+                                                        containerStyle={{ width: "75%" }}
+                                                        inputProps={{
+                                                            placeholder: "Endereço",
+                                                            maxLength: 255,
+                                                            value: cidadeDoador,
+                                                            onChangeText: setCidadeDoador,
+                                                            keyboardType: "default",
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Estado*"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "UF",
+                                                            maxLength: 2,
+                                                            value: estadoDoador,
+                                                            onChangeText: setEstadoDoador,
+                                                            keyboardType: "default",
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="DDD*"
+                                                        containerStyle={{ width: "16%" }}
+                                                        inputProps={{
+                                                            placeholder: "00",
+                                                            maxLength: 2,
+                                                            value: dddDoador,
+                                                            onChangeText: setDddDoador,
+                                                            keyboardType: "number-pad",
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Telefone*"
+                                                        containerStyle={{ width: "79%" }}
+                                                        inputProps={{
+                                                            placeholder: "000000000",
+                                                            maxLength: 9,
+                                                            value: numeroTelDoador,
+                                                            onChangeText: setNumeroTelDoador,
+                                                            keyboardType: "number-pad",
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <CustomInput
+                                                    label="Email*"
+                                                    inputProps={{
+                                                        placeholder: "nome@email.com",
+                                                        maxLength: 255,
+                                                        value: emailDoador,
+                                                        onChangeText: setEmailDoador,
+                                                        keyboardType: "email-address",
+                                                        textContentType: "emailAddress",
+                                                        autoComplete: "email",
+                                                        autoCapitalize: "none",
+                                                    }}
+                                                />
+
+                                                <PasswordInput
+                                                    label="Senha*"
+                                                    isPasswordVisible={senhasVisiveis[0]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(0)}
+                                                    inputProps={{
+                                                        placeholder: "Crie sua senha de acesso",
+                                                        value: senhaDoador,
+                                                        onChangeText: setSenhaDoador,
+                                                        textContentType: "password"
+                                                    }}
+                                                />
+
+                                                <PasswordInput
+                                                    label="Confirmar Senha*"
+                                                    isPasswordVisible={senhasVisiveis[1]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(1)}
+                                                    inputProps={{
+                                                        placeholder: "Repita a senha criada",
+                                                        value: senhaDoador2,
+                                                        onChangeText: setSenhaDoador2,
+                                                        textContentType: "newPassword"
+                                                    }}
+                                                />
+
                                             </View>
-                                        )}
+                                        </ScrollView>
+                                    )}
 
-                                        {tipoPessoa === "PJ" && (
-                                            <View style={styles.DivCadastro}>
-                                                <Text style={styles.Labels}>CNPJ*</Text>
-                                                <TextInput
-                                                    placeholder="00.000.000/0000-00"
-                                                    maxLength={14}
-                                                    value={cnpjDoador}
-                                                    onChangeText={setCnpjDoador}
-                                                    keyboardType="number-pad"
-                                                    style={styles.Input}
+                                    {selectedOption === "ONG" && (
+                                        <ScrollView
+                                            style={styles.formScrollView}
+                                            showsVerticalScrollIndicator={false}
+                                            nestedScrollEnabled={true}
+                                        >
+                                            <View style={styles.formContent}>
+                                                <CustomInput
+                                                    label="Nome da ONG*"
+                                                    inputProps={{
+                                                        placeholder: "Nome da organização",
+                                                        maxLength: 255,
+                                                        value: nome,
+                                                        onChangeText: setNome,
+                                                        keyboardType: "default",
+                                                        textContentType: "organizationName"
+                                                    }}
                                                 />
+
+                                                <CustomInput
+                                                    label="CNPJ*"
+                                                    inputProps={{
+                                                        placeholder: "00.000.000/0000-00",
+                                                        maxLength: 14,
+                                                        value: cnpj,
+                                                        onChangeText: setCnpj,
+                                                        keyboardType: "number-pad"
+                                                    }}
+                                                />
+
+                                                <Dropdown
+                                                    label="Principal tipo de doação que busca*"
+                                                    data={[
+                                                        { value: "Roupas", label: "Roupas" },
+                                                        { value: "Dinheiro", label: "Dinheiro" },
+                                                        { value: "Alimentos", label: "Alimentos / Ração" },
+                                                        { value: "Geral", label: "Abrange qualquer tipo" }
+                                                    ]}
+                                                    onChange={(item) => setTipoAtividade(item.value)}
+                                                    placeholder="Selecione..."
+                                                />
+
+                                                <CustomInput
+                                                    label="CEP*"
+                                                    inputProps={{
+                                                        placeholder: "00000-000",
+                                                        maxLength: 8,
+                                                        value: cep,
+                                                        onChangeText: setCep,
+                                                        keyboardType: "number-pad"
+                                                    }}
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Endereço*"
+                                                        containerStyle={{ width: "75%" }}
+                                                        inputProps={{
+                                                            placeholder: "Rua, Av...",
+                                                            value: rua,
+                                                            onChangeText: setRua,
+                                                            keyboardType: "default"
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Número"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "Nº",
+                                                            value: numero,
+                                                            onChangeText: setNumero,
+                                                            keyboardType: "number-pad"
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <CustomInput
+                                                    label="Complemento"
+                                                    inputProps={{
+                                                        placeholder: "Apto, bloco, etc.",
+                                                        value: complemento,
+                                                        onChangeText: setComplemento,
+                                                        keyboardType: "default"
+                                                    }}
+                                                />
+
+                                                <CustomInput
+                                                    label="Bairro*"
+                                                    inputProps={{
+                                                        placeholder: "Seu bairro",
+                                                        value: bairro,
+                                                        onChangeText: setBairro,
+                                                        keyboardType: "default"
+                                                    }}
+                                                />
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="Cidade*"
+                                                        containerStyle={{ width: "75%" }}
+                                                        inputProps={{
+                                                            placeholder: "Sua cidade",
+                                                            value: cidade,
+                                                            onChangeText: setCidade,
+                                                            keyboardType: "default"
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Estado*"
+                                                        containerStyle={{ width: "20%" }}
+                                                        inputProps={{
+                                                            placeholder: "UF",
+                                                            value: estado,
+                                                            onChangeText: setEstado,
+                                                            autoCapitalize: "characters",
+                                                            maxLength: 2
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <View style={styles.rowInputs}>
+                                                    <CustomInput
+                                                        label="DDD*"
+                                                        containerStyle={{ width: "16%" }}
+                                                        inputProps={{
+                                                            placeholder: "00",
+                                                            value: ddd,
+                                                            onChangeText: setDdd,
+                                                            keyboardType: "number-pad",
+                                                            maxLength: 2
+                                                        }}
+                                                    />
+                                                    <CustomInput
+                                                        label="Telefone*"
+                                                        containerStyle={{ width: "79%" }}
+                                                        inputProps={{
+                                                            placeholder: "00000-0000",
+                                                            value: numeroTel,
+                                                            onChangeText: setNumeroTel,
+                                                            keyboardType: "number-pad",
+                                                            maxLength: 9
+                                                        }}
+                                                    />
+                                                </View>
+
+                                                <CustomInput
+                                                    label="Email de Contato*"
+                                                    inputProps={{
+                                                        placeholder: "contato@suaong.com",
+                                                        value: email,
+                                                        onChangeText: setEmail,
+                                                        keyboardType: "email-address",
+                                                        autoCapitalize: "none",
+                                                        autoComplete: "email",
+                                                        textContentType: "emailAddress"
+                                                    }}
+                                                />
+
+                                                <CustomInput
+                                                    label="Responsável pelo Cadastro*"
+                                                    inputProps={{
+                                                        placeholder: "Nome completo",
+                                                        value: responsavelCadastro,
+                                                        onChangeText: setResponsavelCadastro,
+                                                        keyboardType: "default",
+                                                        textContentType: "name"
+                                                    }}
+                                                />
+
+                                                {/* <CustomInput
+                                                    label="Comprovante de Registro (Opcional)"
+                                                    inputProps={{
+                                                        placeholder: "Link para o comprovante",
+                                                        value: comprovanteRegistro,
+                                                        onChangeText: setComprovanteRegistro,
+                                                        keyboardType: "url"
+                                                    }}
+                                                /> */}
+
+                                                <PasswordInput
+                                                    label="Senha*"
+                                                    isPasswordVisible={senhasVisiveis[3]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(3)}
+                                                    inputProps={{
+                                                        placeholder: "Crie sua senha de acesso",
+                                                        value: senha,
+                                                        onChangeText: setSenha,
+                                                        textContentType: "newPassword"
+                                                    }}
+                                                />
+
+                                                <PasswordInput
+                                                    label="Confirme sua Senha*"
+                                                    isPasswordVisible={senhasVisiveis[4]}
+                                                    onToggleVisibility={() => alternarVisibilidadeSenha(4)}
+                                                    inputProps={{
+                                                        placeholder: "Repita a senha criada",
+                                                        value: senha2,
+                                                        onChangeText: setSenha2,
+                                                        textContentType: "newPassword"
+                                                    }}
+                                                />
+
                                             </View>
-                                        )}
+                                        </ScrollView>
+                                    )}
 
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Data Nascimento*</Text>
-                                            <TextInput
-                                                placeholder="00/00/0000"
-                                                maxLength={10}
-                                                value={dataNascimento}
-                                                editable={false}
-                                                style={styles.Input}
-                                            />
-                                            <Pressable onPress={() => setShowDatePicker(true)} style={{ position: "absolute", bottom: 12, right: 15 }}>
-                                                <FontAwesome name="calendar" size={22} color={Colors.ORANGE} />
-                                            </Pressable>
+                                    <TouchableOpacity style={styles.actionButton} onPress={handleCadastro}>
+                                        <Text style={styles.actionButtonText}>Cadastrar {selectedOption}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
 
-                                            {showDatePicker && (
-                                                <DateTimePicker
-                                                    value={selectedDate || new Date(2000, 0, 1)}
-                                                    mode="date"
-                                                    display="default"
-                                                    maximumDate={new Date()}
-                                                    onChange={handleDateChange}
-                                                />
-                                            )}
-                                        </View>
+                        </Animated.View>
+                    </ScrollView>
 
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>CEP*</Text>
-                                            <TextInput
-                                                placeholder="00000-000"
-                                                maxLength={8}
-                                                value={cepDoador}
-                                                onChangeText={setCepDoador}
-                                                keyboardType="number-pad"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Endereço* / Numero</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="Endereço"
-                                                    maxLength={255}
-                                                    value={ruaDoador}
-                                                    onChangeText={setRuaDoador}
-                                                    keyboardType="default"
-                                                    textContentType="streetAddressLine1"
-                                                    style={styles.InputMedio}
-                                                />
-                                                <TextInput
-                                                    placeholder="Nº"
-                                                    maxLength={10}
-                                                    value={numeroDoador}
-                                                    onChangeText={setNumeroDoador}
-                                                    keyboardType="number-pad"
-                                                    style={styles.InputMini}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Complemento</Text>
-                                            <TextInput
-                                                placeholder="Complemento"
-                                                maxLength={255}
-                                                value={complementoDoador}
-                                                onChangeText={setComplementoDoador}
-                                                keyboardType="default"
-                                                textContentType="streetAddressLine2"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Bairro*</Text>
-                                            <TextInput
-                                                placeholder="Bairro"
-                                                maxLength={255}
-                                                value={bairroDoador}
-                                                onChangeText={setBairroDoador}
-                                                keyboardType="default"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Cidade* / Estado*</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="Cidade"
-                                                    maxLength={255}
-                                                    value={cidadeDoador}
-                                                    onChangeText={setCidadeDoador}
-                                                    keyboardType="default"
-                                                    textContentType="addressCity"
-                                                    style={styles.InputMedio}
-                                                />
-                                                <TextInput
-                                                    placeholder="UF"
-                                                    maxLength={2}
-                                                    value={estadoDoador}
-                                                    onChangeText={setEstadoDoador}
-                                                    keyboardType="default"
-                                                    textContentType="addressState"
-                                                    style={styles.InputMini}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>DDD* / Telefone*</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="DDD"
-                                                    maxLength={2}
-                                                    value={dddDoador}
-                                                    onChangeText={setDddDoador}
-                                                    keyboardType="number-pad"
-                                                    textContentType="telephoneNumber"
-                                                    style={styles.InputDdd}
-                                                />
-                                                <TextInput
-                                                    placeholder="000000000"
-                                                    maxLength={9}
-                                                    value={numeroTelDoador}
-                                                    onChangeText={setNumeroTelDoador}
-                                                    keyboardType="number-pad"
-                                                    textContentType="telephoneNumber"
-                                                    style={styles.InputTel}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Email*</Text>
-                                            <TextInput
-                                                placeholder="Email"
-                                                maxLength={255}
-                                                value={emailDoador}
-                                                onChangeText={setEmailDoador}
-                                                keyboardType="email-address"
-                                                textContentType="emailAddress"
-                                                autoComplete="email"
-                                                autoCapitalize="none"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.WrapperCadastroSenha}>
-                                            <Text style={styles.Labels}>Senha*</Text>
-                                            <TextInput
-                                                placeholder="Digite sua senha"
-                                                maxLength={128}
-                                                value={senhaDoador}
-                                                onChangeText={setSenhaDoador}
-                                                keyboardType="default"
-                                                textContentType="password"
-                                                secureTextEntry={!senhasVisiveis[0]}
-                                                style={styles.InputSenha}
-                                            />
-                                            <TouchableOpacity onPress={() => alternarVisibilidadeSenha(0)} style={styles.MostrarSenha}>
-                                                <Entypo
-                                                    name={senhasVisiveis[0] ? "eye-with-line" : "eye"}
-                                                    style={styles.IconEye}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.WrapperCadastroSenha}>
-                                            <Text style={styles.Labels}>Repita a Senha*</Text>
-                                            <TextInput
-                                                placeholder="Repita sua senha"
-                                                maxLength={128}
-                                                value={senhaDoador2}
-                                                onChangeText={setSenhaDoador2}
-                                                keyboardType="default"
-                                                textContentType="password"
-                                                secureTextEntry={!senhasVisiveis[1]}
-                                                style={styles.InputSenha}
-                                            />
-                                            <TouchableOpacity onPress={() => alternarVisibilidadeSenha(1)} style={styles.MostrarSenha}>
-                                                <Entypo
-                                                    name={senhasVisiveis[1] ? "eye-with-line" : "eye"}
-                                                    style={styles.IconEye}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </ScrollView>
-                                )}
-
-                                {selectedOption === "ONG" && (
-                                    <ScrollView horizontal={false} showsVerticalScrollIndicator={false} removeClippedSubviews={true}>
-
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>ONG*</Text>
-                                            <TextInput
-                                                placeholder="Nome da organização"
-                                                maxLength={255}
-                                                value={nome}
-                                                onChangeText={setNome}
-                                                keyboardType="default"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>CNPJ*</Text>
-                                            <TextInput
-                                                placeholder="00.000.000/0000-00"
-                                                maxLength={14}
-                                                value={cnpj}
-                                                onChangeText={setCnpj}
-                                                keyboardType="number-pad"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Tipo Doação*</Text>
-                                            <Dropdown
-                                                data={[
-                                                    { value: "Roupas", label: "Roupas" },
-                                                    { value: "Dinheiro", label: "Dinheiro" },
-                                                    { value: "Alimentos", label: "Alimentos / Ração" },
-                                                    { value: "Geral", label: "Abrange qualquer tipo de doação" }
-                                                ]}
-                                                onChange={(item) => setTipoAtividade(item.value)}
-                                                placeholder="Selecione..."
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>CEP*</Text>
-                                            <TextInput
-                                                placeholder="00000-000"
-                                                maxLength={8}
-                                                value={cep}
-                                                onChangeText={setCep}
-                                                keyboardType="number-pad"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Endereço* / Numero</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="Endereço"
-                                                    maxLength={255}
-                                                    value={rua}
-                                                    onChangeText={setRua}
-                                                    keyboardType="default"
-                                                    textContentType="streetAddressLine1"
-                                                    style={styles.InputMedio}
-                                                />
-                                                <TextInput
-                                                    placeholder="Nº"
-                                                    maxLength={10}
-                                                    value={numero}
-                                                    onChangeText={setNumero}
-                                                    keyboardType="number-pad"
-                                                    style={styles.InputMini}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Complemento</Text>
-                                            <TextInput
-                                                placeholder="Complemento"
-                                                maxLength={255}
-                                                value={complemento}
-                                                onChangeText={setComplemento}
-                                                keyboardType="default"
-                                                textContentType="streetAddressLine2"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Bairro*</Text>
-                                            <TextInput
-                                                placeholder="Bairro"
-                                                maxLength={255}
-                                                value={bairro}
-                                                onChangeText={setBairro}
-                                                keyboardType="default"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>Cidade* / Estado*</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="Cidade"
-                                                    maxLength={255}
-                                                    value={cidade}
-                                                    onChangeText={setCidade}
-                                                    keyboardType="default"
-                                                    textContentType="addressCity"
-                                                    style={styles.InputMedio}
-                                                />
-                                                <TextInput
-                                                    placeholder="UF"
-                                                    maxLength={2}
-                                                    value={estado}
-                                                    onChangeText={setEstado}
-                                                    keyboardType="default"
-                                                    textContentType="addressState"
-                                                    style={styles.InputMini}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastroDoisInputs}>
-                                            <Text style={styles.Labels}>DDD* / Telefone*</Text>
-                                            <View style={styles.WrapperDoisInputs}>
-                                                <TextInput
-                                                    placeholder="DDD"
-                                                    maxLength={2}
-                                                    value={ddd}
-                                                    onChangeText={setDdd}
-                                                    keyboardType="number-pad"
-                                                    textContentType="telephoneNumber"
-                                                    style={styles.InputDdd}
-                                                />
-                                                <TextInput
-                                                    placeholder="000000000"
-                                                    maxLength={9}
-                                                    value={numeroTel}
-                                                    onChangeText={setNumeroTel}
-                                                    keyboardType="number-pad"
-                                                    textContentType="telephoneNumber"
-                                                    style={styles.InputTel}
-                                                />
-                                            </View>
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Email*</Text>
-                                            <TextInput
-                                                placeholder="Email"
-                                                maxLength={255}
-                                                value={email}
-                                                onChangeText={setEmail}
-                                                keyboardType="email-address"
-                                                textContentType="emailAddress"
-                                                autoComplete="email"
-                                                autoCapitalize="none"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Responsável*</Text>
-                                            <TextInput
-                                                placeholder="Nome completo do responsável"
-                                                maxLength={255}
-                                                value={responsavelCadastro}
-                                                onChangeText={setResponsavelCadastro}
-                                                keyboardType="default"
-                                                textContentType="name"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.DivCadastro}>
-                                            <Text style={styles.Labels}>Comprovante de Registro</Text>
-                                            <TextInput
-                                                placeholder="Comprovante de registro"
-                                                maxLength={255}
-                                                value={comprovanteRegistro}
-                                                onChangeText={setComprovanteRegistro}
-                                                keyboardType="default"
-                                                style={styles.Input}
-                                            />
-                                        </View>
-                                        <View style={styles.WrapperCadastroSenha}>
-                                            <Text style={styles.Labels}>Senha*</Text>
-                                            <TextInput
-                                                placeholder="Digite sua senha"
-                                                maxLength={128}
-                                                value={senha}
-                                                onChangeText={setSenha}
-                                                keyboardType="default"
-                                                textContentType="password"
-                                                secureTextEntry={!senhasVisiveis[3]}
-                                                style={styles.InputSenha}
-                                            />
-                                            <TouchableOpacity onPress={() => alternarVisibilidadeSenha(3)} style={styles.MostrarSenha}>
-                                                <Entypo
-                                                    name={senhasVisiveis[3] ? "eye-with-line" : "eye"}
-                                                    style={styles.IconEye}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.WrapperCadastroSenha}>
-                                            <Text style={styles.Labels}>Repita a Senha*</Text>
-                                            <TextInput
-                                                placeholder="Repita sua senha"
-                                                maxLength={128}
-                                                value={senha2}
-                                                onChangeText={setSenha2}
-                                                keyboardType="default"
-                                                textContentType="password"
-                                                secureTextEntry={!senhasVisiveis[4]}
-                                                style={styles.InputSenha}
-                                            />
-                                            <TouchableOpacity onPress={() => alternarVisibilidadeSenha(4)} style={styles.MostrarSenha}>
-                                                <Entypo
-                                                    name={senhasVisiveis[4] ? "eye-with-line" : "eye"}
-                                                    style={styles.IconEye}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </ScrollView>
-                                )}
-                            </View>
-
-                            <TouchableOpacity style={styles.BtnCadastrar} onPress={handleCadastro}>
-                                <Text style={styles.BtnTextCadastrar}>Cadastrar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    <View style={styles.Footer}>
-                        <View style={styles.WrapperLogin}>
-                            <Image source={require("../../assets/images/mao.png")} style={styles.Mao} />
-                            <Text style={styles.Label}>Já tem uma conta?</Text>
+                    <View style={styles.footer}>
+                        <Image source={require("../../assets/images/mao.png")} style={styles.handImage} />
+                        <View style={styles.signupContainer}>
+                            <Text style={styles.signupText}>Já tem uma conta?</Text>
                             <TouchableOpacity onPress={() => router.navigate('/(public)/login')}>
-                                <Text style={styles.Label2}>Faça seu login!</Text>
+                                <Text style={styles.signupLink}>Faça seu login!</Text>
                             </TouchableOpacity>
                         </View>
-
-
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </View>
-
-
-
-
-
-
         </SafeAreaView>
     );
-}
+});
 
 const styles = StyleSheet.create({
-    Container: {
+    safeArea: {
         flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#00000050"
+        backgroundColor: Colors.BG,
     },
-    modalStyle: {
-        backgroundColor: Colors.WHITE,
-        padding: 15,
-        borderRadius: 15,
+    container: {
+        flex: 1,
+        position: 'relative',
+        backgroundColor: 'rgba(10, 10, 10, 0.65)',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        // borderColor: Colors.ORANGE,
-        // borderWidth: 1,
-        elevation: 2,
-        shadowColor: "#12121275",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        backgroundColor: Colors.BG,
     },
-    btnFechar: {
-        backgroundColor: Colors.ORANGE,
-        padding: 10,
-        borderRadius: 35,
-        width: 140,
-        // borderColor: Colors.BLACK,
-        // borderWidth: 1,
-        alignItems: "center",
+    bgImage: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+        zIndex: -1,
     },
-    btnFecharlText: {
+    scrollViewContent: {
+        flexGrow: 1,
+        paddingBottom: 20,
+    },
+
+    header: {
+        paddingTop: 20,
+        paddingHorizontal: '8%',
+    },
+    backButton: {
+        width: 45,
+        height: 45,
+        borderRadius: 23,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    backIcon: {
         color: Colors.WHITE,
-        // fontWeight: "bold",
-    },
-    ImgEasyDonate: {
-        width: 150,
-        height: 80,
-    },
-    Bg: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: -1
-    },
-    Wrapper: {
-        width: "80%",
-        height: "100%"
-    },
-    Header: {
-        //backgroundColor: "#0f0",
-        width: "100%",
-        height: "15%",
-        display: "flex",
-        justifyContent: "flex-end"
-    },
-    BtnVoltar: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: 40,
-        height: 40,
-        borderWidth: 2,
-        borderRadius: 10,
-        borderColor: Colors.ORANGE,
-        backgroundColor: Colors.BRANCO_BTN_VOLTAR,
-        marginBottom: 20
-    },
-    IconVoltar: {
-        color: Colors.WHITE,
-        fontSize: 18
-    },
-    Section: {
-        //backgroundColor: "#ff0",
-        width: "100%",
-        height: "70%",
-    },
-    WrapperCadastro: {
-        //backgroundColor: "#cecece",
-        width: "100%",
-        height: "90%",
-        display: "flex",
-        alignItems: "center"
-    },
-    H1: {
-        fontSize: 30,
-        color: Colors.ORANGE,
-        fontFamily: "Montserrat-Bold"
-    },
-    P: {
-        fontSize: 17,
-        color: Colors.WHITE,
-        marginBottom: 10,
-        textAlign: "center",
-        fontFamily: "Montserrat"
-    },
-    DivCadastroAll: {
-        //backgroundColor: "#f0f",
-        width: "100%",
-        height: 245,
-        marginBottom: 10
-    },
-    Labels: {
-        color: Colors.WHITE,
-        fontFamily: "Montserrat",
-        fontSize: 14
-    },
-    DivCadastro: {
-        width: "100%",
-        marginBottom: 15
-    },
-    WrapperCadastroSenha: {
-        //backgroundColor: "#f0f",
-        width: "100%",
-        paddingBottom: 15
-    },
-    InputSenha: {
-        backgroundColor: Colors.WHITE,
-        paddingLeft: 15,
-        paddingRight: 65,
-        fontSize: 14,
-        borderRadius: 5,
-        fontFamily: "Montserrat",
-        borderWidth: 1,
-        borderColor: Colors.GRAY,
-        width: "100%"
-    },
-    MostrarSenha: {
-        //backgroundColor: "#f00",
-        width: "20%",
-        height: 50,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "absolute",
-        right: 0,
-        top: 17
-    },
-    IconEye: {
         fontSize: 20,
-        color: Colors.GRAY
     },
-    DivCadastroDoisInputs: {
-        width: "100%",
-        marginBottom: 15
+    section: {
+        alignItems: 'center',
+        paddingHorizontal: '8%',
+        paddingVertical: 20,
     },
-    WrapperDoisInputs: {
-        display: "flex",
-        flexDirection: "row"
+    h1: {
+        color: Colors.ORANGE,
+        fontSize: 30,
+        fontFamily: "Montserrat-Bold",
+        textAlign: 'center',
     },
-    InputMedio: {
-        width: "75%",
-        backgroundColor: Colors.WHITE,
-        paddingLeft: 15,
-        paddingRight: 15,
-        borderRadius: 5,
-        fontFamily: "Montserrat",
+    h2: {
+        color: Colors.WHITE,
         fontSize: 14,
-        marginRight: "5%",
-        borderWidth: 1,
-        borderColor: Colors.GRAY
-    },
-    InputMini: {
-        width: "20%",
-        backgroundColor: Colors.WHITE,
         textAlign: "center",
-        borderRadius: 5,
         fontFamily: "Montserrat",
-        fontSize: 14,
-        borderWidth: 1,
-        borderColor: Colors.GRAY
+        marginTop: 8,
+        marginBottom: 30,
+        lineHeight: 25,
+        opacity: 0.8,
     },
-    InputDdd: {
-        width: "25%",
-        backgroundColor: Colors.WHITE,
-        paddingLeft: 18,
-        paddingRight: 18,
-        borderRadius: 5,
-        fontFamily: "Montserrat",
-        fontSize: 14,
-        marginRight: "5%",
-        textAlign: "center",
-        borderWidth: 1,
-        borderColor: Colors.GRAY
-    },
-    InputTel: {
-        width: "70%",
-        backgroundColor: Colors.WHITE,
-        paddingLeft: 15,
-        paddingRight: 15,
-        borderRadius: 5,
-        fontFamily: "Montserrat",
-        fontSize: 14,
-        borderWidth: 1,
-        borderColor: Colors.GRAY
-    },
-    Input: {
+    actionButton: {
         width: "100%",
-        backgroundColor: Colors.WHITE,
-        paddingLeft: 15,
-        paddingRight: 0,
-        borderRadius: 5,
-        fontFamily: "Montserrat",
-        fontSize: 14,
-        borderWidth: 1,
-        borderColor: Colors.GRAY
-    },
-    BtnCadastrar: {
-        width: "100%",
-        padding: 12,
         backgroundColor: Colors.ORANGE,
-        borderRadius: 5,
-        marginTop: 10
+        paddingVertical: 16,
+        borderRadius: 10,
+        marginTop: 20,
+        flexDirection: 'row',
+        justifyContent: "center",
+        alignItems: 'center',
+        gap: 8,
     },
-    BtnTextCadastrar: {
+    actionButtonText: {
         textAlign: "center",
         color: Colors.WHITE,
-        fontFamily: "Montserrat-Medium",
-        fontSize: 17
+        fontSize: 16,
+        fontFamily: "Montserrat-Medium"
     },
-    Footer: {
-        //backgroundColor: "#f00",
-        width: "100%",
-        height: "15%",
-        display: "flex",
-        justifyContent: "flex-end"
+    footer: {
+        alignItems: 'center',
+        paddingBottom: 20,
+        // paddingTop: 10,
+        paddingHorizontal: '8%',
     },
-    WrapperLogin: {
-        //backgroundColor: "#12121225",
-        width: "100%",
-        display: "flex",
-        alignItems: "center"
+    handImage: {
+        width: 50,
+        height: 43,
+        marginBottom: 15,
     },
-    Mao: {
-        width: 60,
-        height: 52,
-        marginBottom: 10,
+    signupContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    Label: {
+    signupText: {
         color: Colors.WHITE,
         fontFamily: "Montserrat",
         fontSize: 15,
+        marginRight: 5,
     },
-    Label2: {
+    signupLink: {
         color: Colors.ORANGE,
         fontFamily: "Montserrat-Bold",
-        fontSize: 16,
-        marginBottom: 20
-    }
-})
+        fontSize: 15,
+    },
+    formTitle: {
+        color: Colors.WHITE,
+        fontSize: 18,
+        fontFamily: 'Montserrat',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    formContainer: {
+        width: '100%',
+    },
+    formContent: {
+        width: '100%',
+    },
+    formScrollView: {
+        maxHeight: 350, // Altura que mostra aproximadamente 5 campos de input
+        width: '100%',
+    },
+    label: {
+        color: Colors.WHITE,
+        fontFamily: "Montserrat",
+        fontSize: 14,
+        marginBottom: 8,
+    },
+    input: {
+        width: "100%",
+        backgroundColor: Colors.WHITE,
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+        borderRadius: 5,
+        fontFamily: "Montserrat",
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: Colors.GRAY,
+    },
+    rowInputs: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    inputMedium: {
+        width: '75%',
+    },
+    inputSmall: {
+        width: '20%',
+        textAlign: 'center',
+    },
+    inputDdd: {
+        width: '25%',
+        textAlign: 'center',
+    },
+    inputTel: {
+        width: '70%',
+    },
+    dateInputContainer: {
+        position: 'relative',
+    },
+    calendarButton: {
+        position: "absolute",
+        bottom: 28,
+        right: 15,
+    },
+    passwordContainer: {
+        position: 'relative',
+    },
+    passwordInput: {
+        width: "100%",
+        backgroundColor: Colors.WHITE,
+        paddingHorizontal: 15,
+        paddingRight: 50,
+        paddingVertical: 12,
+        borderRadius: 5,
+        fontFamily: "Montserrat",
+        fontSize: 14,
+        borderWidth: 1,
+        borderColor: Colors.GRAY,
+    },
+    eyeButton: {
+        position: 'absolute',
+        right: 15,
+        top: 15,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 30,
+    },
+    eyeIcon: {
+        fontSize: 20,
+        color: Colors.GRAY,
+    },
+});

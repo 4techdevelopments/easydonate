@@ -27,11 +27,13 @@ const OngCard = ({ ong }: Props) => {
                 </View>
 
                 <View style={styles.WrapperImgOng}>
-                    <Image
-                        source={require('../assets/images/ongviver.png')}
-                        style={styles.OngImage}
-                        resizeMode="center"
-                    />
+                    {ong.logo ? (
+                        <Image
+                            source={{ uri: ong.logo }}
+                            style={styles.OngImage}
+                            resizeMode="center"
+                        />
+                    ) : null}
                 </View>
 
                 <View style={styles.WrapperOng}>
