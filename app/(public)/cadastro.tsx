@@ -3,8 +3,10 @@ import Checkbox from '@/components/Checkbox';
 import CustomInput from "@/components/CustomInput";
 import Dropdown from "@/components/dropdown";
 import EasyDonateSvg from "@/components/easyDonateSvg";
+import LegalModal from '@/components/LegalModal';
 import PasswordInput from "@/components/PasswordInput";
 import RadioSelector from "@/components/radioGroup";
+import { politicaDePrivacidade, termosDeUso } from '@/constants/constants';
 import { useModalFeedback } from "@/contexts/ModalFeedbackContext";
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,6 +24,16 @@ export default React.memo(function Cadastro() {
     const [etapa, setEtapa] = useState<'selecao' | 'formulario'>('selecao');
     const [selectedOption, setSelectedOption] = useState<string>('');
     const { mostrarModalFeedback } = useModalFeedback();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalContent, setModalContent] = useState({ title: '', content: '' });
+    const handleOpenModal = (type: 'termos' | 'privacidade') => {
+        if (type === 'termos') {
+            setModalContent({ title: 'Termos de Uso', content: termosDeUso });
+        } else {
+            setModalContent({ title: 'Política de Privacidade', content: politicaDePrivacidade });
+        }
+        setModalVisible(true);
+    };
     const [aceitouTermos, setAceitouTermos] = useState(false);
 
     // [DOADOR]
@@ -783,7 +795,7 @@ export default React.memo(function Cadastro() {
                                                                 Declaro que li e estou de acordo com os{' '}
                                                             </Text>
 
-                                                            <TouchableOpacity onPress={() => {/* Navegar para Termos */ }}>
+                                                            <TouchableOpacity onPress={() => handleOpenModal('termos')}>
                                                                 <Text style={[styles.termsText, styles.linkText]}>
                                                                     Termos de Uso
                                                                 </Text>
@@ -793,7 +805,7 @@ export default React.memo(function Cadastro() {
                                                                 {' '}e a{' '}
                                                             </Text>
 
-                                                            <TouchableOpacity onPress={() => {/* Navegar para Privacidade */ }}>
+                                                            <TouchableOpacity onPress={() => handleOpenModal('privacidade')}>
                                                                 <Text style={[styles.termsText, styles.linkText]}>
                                                                     Política de Privacidade.
                                                                 </Text>
@@ -1020,7 +1032,7 @@ export default React.memo(function Cadastro() {
                                                                 Declaro que li e estou de acordo com os{' '}
                                                             </Text>
 
-                                                            <TouchableOpacity onPress={() => {/* Navegar para Termos */ }}>
+                                                            <TouchableOpacity onPress={() => handleOpenModal('termos')}>
                                                                 <Text style={[styles.termsText, styles.linkText]}>
                                                                     Termos de Uso
                                                                 </Text>
@@ -1030,7 +1042,7 @@ export default React.memo(function Cadastro() {
                                                                 {' '}e a{' '}
                                                             </Text>
 
-                                                            <TouchableOpacity onPress={() => {/* Navegar para Privacidade */ }}>
+                                                            <TouchableOpacity onPress={() => handleOpenModal('privacidade')}>
                                                                 <Text style={[styles.termsText, styles.linkText]}>
                                                                     Política de Privacidade.
                                                                 </Text>
@@ -1041,6 +1053,7 @@ export default React.memo(function Cadastro() {
                                                 />
 
                                             </View>
+                                            
 
                                         </ScrollView>
 
@@ -1051,6 +1064,12 @@ export default React.memo(function Cadastro() {
                                     <TouchableOpacity style={[styles.actionButton, !aceitouTermos && styles.buttonDisabled]} onPress={handleCadastro}>
                                         <Text style={styles.actionButtonText}>Cadastrar {selectedOption}</Text>
                                     </TouchableOpacity>
+                                    <LegalModal
+                                                isVisible={modalVisible}
+                                                onClose={() => setModalVisible(false)}
+                                                title={modalContent.title}
+                                                content={modalContent.content}
+                                            />
                                 </View>
                             )}
 
