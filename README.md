@@ -80,9 +80,9 @@ npm install
 yarn install
 ```
 
-3. Configure a API
+4. Configure a API
 
-3.1. Edite o arquivo api/axios.ts e configure o IP da sua API:
+4.1. Edite o arquivo api/axios.ts e configure o IP da sua API:
 
 ```typescript
 const api = axios.create({
@@ -93,13 +93,13 @@ const api = axios.create({
 });
 ```
 
-3.2. Como encontrar seu IP:
+4.2. Como encontrar seu IP:
 
 - Windows: ipconfig no cmd<br>
 - macOS/Linux: ifconfig no terminal<br>
 - Use o IPv4 da sua rede local (ex: 192.168.0.0)
 
-4. Execute o projeto
+5. Execute o projeto
 ```bash
 npx expo start  #iniciar o app
 ```
