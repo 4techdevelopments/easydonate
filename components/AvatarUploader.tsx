@@ -22,7 +22,7 @@ import PhotoPickerModal from './PhotoPickerModal';
 
 // A importação do ImageManipulator e MaterialIcons foi removida.
 
-const IMG_BB_API_KEY = "0064c7ca5d35d2ff095d09220c71f750";
+const IMG_BB_API_KEY = "TOKEN";
 
 interface AvatarUploaderProps {
     size?: number;

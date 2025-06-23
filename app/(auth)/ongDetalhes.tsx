@@ -140,7 +140,7 @@ export default function OngDetalhes() {
         }, 2100);
     };
 
-    const IMG_BB_API_KEY = "730d4ced756f66548ca8bdc5295b81a0";
+    const IMG_BB_API_KEY = "TOKEN";
 
     // [UPLOAD LOGO]
     const handleUpload = async (uri: string) => {
