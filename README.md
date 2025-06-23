@@ -107,7 +107,7 @@ npx expo start  #iniciar o app
 npx expo start -c  # iniciar o app limpando cache
 ```
 
-5. Abra no dispositivo
+6. Abra no dispositivo
 
 - Escaneie o QR Code com o Expo Go ou use um emulador Android/iOS configurado
 
