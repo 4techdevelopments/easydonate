@@ -253,9 +253,6 @@ npm install
 - Paginação em listas grandes
 - Cache de requisições
 
-## Licença
-- Este projeto está sob a licença MIT. Veja LICENSE para mais detalhes.
-
 ## Time
 
 - Guilherme Rodrigues de Queiroz - Desenvolvedor Back-End
@@ -264,4 +261,3 @@ npm install
 <img src="https://img.shields.io/badge/React_Native-0.79.4-blue"></img>
 <img src="https://img.shields.io/badge/Expo-SDK_53-black"></img>
 <img src="https://img.shields.io/badge/TypeScript-5.8.3-blue"></img>
-<img src="https://img.shields.io/badge/License-MIT-green"></img>
