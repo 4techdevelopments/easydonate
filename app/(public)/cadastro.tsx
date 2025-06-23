@@ -1,4 +1,5 @@
 import api from "@/api/axios";
+import Checkbox from '@/components/Checkbox';
 import CustomInput from "@/components/CustomInput";
 import Dropdown from "@/components/dropdown";
 import EasyDonateSvg from "@/components/easyDonateSvg";
@@ -21,6 +22,7 @@ export default React.memo(function Cadastro() {
     const [etapa, setEtapa] = useState<'selecao' | 'formulario'>('selecao');
     const [selectedOption, setSelectedOption] = useState<string>('');
     const { mostrarModalFeedback } = useModalFeedback();
+    const [aceitouTermos, setAceitouTermos] = useState(false);
 
     // [DOADOR]
     const [emailDoador, setEmailDoador] = useState('');
@@ -103,6 +105,13 @@ export default React.memo(function Cadastro() {
 
     // [CADASTRO]
     function handleCadastro() {
+        // PASSO 1: Adicionar a validação logo no início da função
+        if (!aceitouTermos) {
+            mostrarModalFeedback("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.", 'error', undefined, "Estamos quase lá!");
+            return; // Impede que o resto do código seja executado
+        }
+
+        // O resto da sua lógica continua exatamente igual
         if (selectedOption === 'ONG') {
             cadastroOng();
         } else if (selectedOption === 'Doador') {
@@ -234,6 +243,7 @@ export default React.memo(function Cadastro() {
 
         let bodyRequestOng: any = {
             email, senha, tipoUsuario, nome, cnpj, tipoAtividade, descricaoMissao, cep, rua, numero, complemento, bairro, cidade, estado, ddd, responsavelCadastro, comprovanteRegistro,
+            aceitouTermos: aceitouTermos,
         };
 
         const telefoneRegex = /^\d{8}$/;
@@ -343,6 +353,7 @@ export default React.memo(function Cadastro() {
             cidade: cidadeDoador,
             estado: estadoDoador,
             ddd: dddDoador,
+            aceitouTermos: aceitouTermos,
         };
 
         const telefoneRegex = /^\d{8}$/;
@@ -418,7 +429,7 @@ export default React.memo(function Cadastro() {
             Animated.timing(translateY, {
                 toValue: 0,
                 duration: 500,
-                easing: Easing.bezier(0.25, 0.1, 0.25, 1), 
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
                 useNativeDriver: true,
             }).start();
         });
@@ -762,6 +773,36 @@ export default React.memo(function Cadastro() {
                                                     }}
                                                 />
 
+                                                <Checkbox
+                                                    isChecked={aceitouTermos}
+                                                    onPress={() => setAceitouTermos(!aceitouTermos)}
+                                                    label={
+                                                        // Um container que permite que os itens quebrem a linha
+                                                        <View style={styles.termsLabelContainer}>
+                                                            <Text style={styles.termsText}>
+                                                                Declaro que li e estou de acordo com os{' '}
+                                                            </Text>
+
+                                                            <TouchableOpacity onPress={() => {/* Navegar para Termos */ }}>
+                                                                <Text style={[styles.termsText, styles.linkText]}>
+                                                                    Termos de Uso
+                                                                </Text>
+                                                            </TouchableOpacity>
+
+                                                            <Text style={styles.termsText}>
+                                                                {' '}e a{' '}
+                                                            </Text>
+
+                                                            <TouchableOpacity onPress={() => {/* Navegar para Privacidade */ }}>
+                                                                <Text style={[styles.termsText, styles.linkText]}>
+                                                                    Política de Privacidade.
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    }
+                                                    containerStyle={styles.termsContainer}
+                                                />
+
                                             </View>
                                         </ScrollView>
                                     )}
@@ -969,11 +1010,45 @@ export default React.memo(function Cadastro() {
                                                     }}
                                                 />
 
+                                                <Checkbox
+                                                    isChecked={aceitouTermos}
+                                                    onPress={() => setAceitouTermos(!aceitouTermos)}
+                                                    label={
+                                                        // Um container que permite que os itens quebrem a linha
+                                                        <View style={styles.termsLabelContainer}>
+                                                            <Text style={styles.termsText}>
+                                                                Declaro que li e estou de acordo com os{' '}
+                                                            </Text>
+
+                                                            <TouchableOpacity onPress={() => {/* Navegar para Termos */ }}>
+                                                                <Text style={[styles.termsText, styles.linkText]}>
+                                                                    Termos de Uso
+                                                                </Text>
+                                                            </TouchableOpacity>
+
+                                                            <Text style={styles.termsText}>
+                                                                {' '}e a{' '}
+                                                            </Text>
+
+                                                            <TouchableOpacity onPress={() => {/* Navegar para Privacidade */ }}>
+                                                                <Text style={[styles.termsText, styles.linkText]}>
+                                                                    Política de Privacidade.
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    }
+                                                    containerStyle={styles.termsContainer}
+                                                />
+
                                             </View>
+
                                         </ScrollView>
+
                                     )}
 
-                                    <TouchableOpacity style={styles.actionButton} onPress={handleCadastro}>
+
+
+                                    <TouchableOpacity style={[styles.actionButton, !aceitouTermos && styles.buttonDisabled]} onPress={handleCadastro}>
                                         <Text style={styles.actionButtonText}>Cadastrar {selectedOption}</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1045,6 +1120,41 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: '8%',
         paddingVertical: 20,
+    },
+
+    termsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center', // Alinha a caixinha com o topo do texto
+        width: '100%',
+        gap: 10,
+    },
+
+    // NOVO container para o texto, que permite a quebra de linha
+    termsLabelContainer: {
+        flexDirection: 'row', // Coloca os textos e links lado a lado
+        flexWrap: 'wrap',     // Permite que quebrem para a próxima linha
+        flex: 1,              // Ocupa o espaço restante
+    },
+
+    termsText: {
+        color: Colors.WHITE,
+        fontFamily: 'Montserrat',
+        fontSize: 12.6,
+        lineHeight: 20,
+    },
+
+    linkText: {
+        color: Colors.ORANGE,
+        fontFamily: 'Montserrat-Bold',
+        // O fontSize e o lineHeight serão herdados de styles.termsText
+        // quando combinados no array de estilo, como em [styles.termsText, styles.linkText]
+    },
+
+
+    // Estilo para o botão quando ele estiver desabilitado
+    buttonDisabled: {
+        opacity: .5, // Deixa o botão semi-transparente para indicar que não é clicável
+        backgroundColor: Colors.ORANGE,
     },
     h1: {
         color: Colors.ORANGE,
