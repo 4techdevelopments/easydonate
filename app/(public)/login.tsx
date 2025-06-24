@@ -78,8 +78,7 @@ export default React.memo(function Login() {
             mostrarModalFeedback(
                 msg,
                 'error',
-                undefined,
-                "Ops! Algo deu errado"
+                undefined
             );
         }
     };

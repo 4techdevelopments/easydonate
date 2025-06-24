@@ -1,5 +1,4 @@
 // components/MarkdownText.tsx
-
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Colors from './Colors';
@@ -38,8 +37,12 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({ content }) => {
         if (trimmedLine.startsWith('- ')) {
           return (
             <View key={index} style={styles.listItemContainer}>
-                <Text style={styles.listItemBullet}>•</Text>
-                <Text style={styles.paragraph}>{trimmedLine.substring(2)}</Text>
+              <Text style={styles.listItemBullet}>
+                •
+              </Text>
+              <Text style={styles.paragraph}>
+                {trimmedLine.substring(2)}
+              </Text>
             </View>
           );
         }
@@ -60,14 +63,14 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({ content }) => {
 
 const styles = StyleSheet.create({
   h1: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Montserrat-Bold',
     color: Colors.BLACK,
     marginBottom: 15,
     marginTop: 10,
   },
   h2: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Montserrat-Bold',
     color: Colors.ORANGE,
     marginBottom: 10,

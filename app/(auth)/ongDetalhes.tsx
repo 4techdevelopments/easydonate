@@ -2,6 +2,7 @@ import api from '@/api/axios';
 import Colors from '@/components/Colors';
 import EasyDonateSvg from '@/components/easyDonateSvg';
 import ModalDoacao from '@/components/modalDoacao';
+import { Logo } from "@/constants/constants";
 import { useModalFeedback } from '@/contexts/ModalFeedbackContext';
 import { useAuth } from '@/routes/AuthContext';
 import PrivateRoute from '@/routes/PrivateRoute';
@@ -140,7 +141,7 @@ export default function OngDetalhes() {
         }, 2100);
     };
 
-    const IMG_BB_API_KEY = "TOKEN";
+    const LGK = Logo.imgbb;
 
     // [UPLOAD LOGO]
     const handleUpload = async (uri: string) => {
@@ -155,7 +156,7 @@ export default function OngDetalhes() {
             });
             const formData = new FormData();
             formData.append("image", base64);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_API_KEY}`, {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${LGK}`, {
                 method: "POST",
                 body: formData,
             });

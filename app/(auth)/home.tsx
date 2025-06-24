@@ -7,12 +7,14 @@ import OngCard from "@/components/ongCard";
 import { useAuth } from "@/routes/AuthContext";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Ong } from "@/types/Ong";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useFonts } from "expo-font";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -51,6 +53,25 @@ export default function Home() {
   useEffect(() => {
     fetchOngs();
   }, []);
+
+  // A lógica de fetch, upload e delete permanece a mesma.
+    const fetchUsuarioAtualizado = useCallback(async () => {
+        if (!usuario?.idUsuario) return;
+        try {
+            const response = await api.get(`/Usuario/${usuario.idUsuario}`);
+            if (response.status === 200 && response.data.avatar !== usuario.avatar) {
+                atualizarUsuario({ avatar: response.data.avatar });
+            }
+        } catch (error) {
+            console.warn("Erro ao buscar dados atualizados do usuário:", error);
+        }
+    }, [usuario?.idUsuario, usuario?.avatar, atualizarUsuario]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchUsuarioAtualizado();
+        }, [fetchUsuarioAtualizado])
+    );
 
   const filteredOngs = ongs.filter(ong => {
     const matchesSearch = ong.nome?.toLowerCase().includes(searchText.toLowerCase());
@@ -124,6 +145,7 @@ export default function Home() {
                   <ScrollView horizontal={true} style={styles.ScrollHorizontal} showsHorizontalScrollIndicator={false}>
                     <TouchableWithoutFeedback onPress={() => setSelectedCategory('Geral')}>
                       <View style={selectedCategory === 'Geral' ? styles.OptionsActive : styles.Options}>
+                        <MaterialCommunityIcons name="hand-heart-outline" size={24} />
                         <Text style={selectedCategory === 'Geral' ? styles.TextOptionsActive : styles.TextOptions}>Geral</Text>
                       </View>
                     </TouchableWithoutFeedback>
@@ -347,7 +369,7 @@ const styles = StyleSheet.create({
   },
   TextOptionsActive: {
     fontSize: 14,
-    fontFamily: "Montserrat-Bold"
+    fontFamily: "Montserrat"
   },
   Options: {
     //backgroundColor: "#0ff",

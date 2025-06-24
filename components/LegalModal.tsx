@@ -2,9 +2,25 @@
 
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { Dimensions, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Dimensions,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import Colors from './Colors';
 import MarkdownText from './MarkdownText';
 
@@ -16,39 +32,41 @@ interface LegalModalProps {
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-// Aumentamos um pouco a altura para dar mais espaço para a rolagem
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.80; 
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.60;
 
 const LegalModal: React.FC<LegalModalProps> = ({ isVisible, onClose, title, content }) => {
   const translateY = useSharedValue(SCREEN_HEIGHT);
+  const context = useSharedValue({ y: 0 });
 
   useEffect(() => {
-    // Animação de subida quando o modal se torna visível
     if (isVisible) {
       translateY.value = withSpring(0, { damping: 18, stiffness: 120 });
     }
-  }, [isVisible, translateY]);
+  }, [isVisible]);
 
   const handleClose = () => {
     'worklet';
-    // Animação de descida para fechar o modal
-    translateY.value = withTiming(SCREEN_HEIGHT, { duration: 300 });
-    // Chama a função onClose do React após a animação terminar
-    runOnJS(setTimeout)(onClose, 300);
+    translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 });
+    runOnJS(setTimeout)(onClose, 250);
   };
 
-  // Gesto de arrastar (pan) que será aplicado APENAS no cabeçalho
+  // Pan gesture para arrastar o modal para baixo
   const panGesture = Gesture.Pan()
-    .onChange((event) => {
-      // Permite arrastar o modal para baixo, mas não para cima
-      translateY.value = Math.max(0, event.translationY);
+    .onStart(() => {
+      context.value = { y: translateY.value };
     })
-    .onEnd(() => {
-      // Se arrastou mais de 1/4 da altura, fecha o modal
-      if (translateY.value > MODAL_HEIGHT / 4) {
+    .onUpdate((event) => {
+      // Só permite arrastar para baixo
+      if (event.translationY >= 0) {
+        translateY.value = context.value.y + event.translationY;
+      }
+    })
+    .onEnd((event) => {
+      const shouldClose = translateY.value > MODAL_HEIGHT / 4 || event.velocityY > 800;
+      
+      if (shouldClose) {
         handleClose();
       } else {
-        // Senão, volta à posição inicial com efeito elástico
         translateY.value = withSpring(0, { damping: 18, stiffness: 120 });
       }
     });
@@ -60,109 +78,134 @@ const LegalModal: React.FC<LegalModalProps> = ({ isVisible, onClose, title, cont
   return (
     <Modal
       animationType="fade"
-      transparent={true}
+      transparent
       visible={isVisible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Pressable style={styles.modalOverlay} onPress={handleClose}>
-            {/* O Animated.View agora engloba toda a "gaveta" */}
-            <Animated.View 
-              style={[styles.modalContentWrapper, animatedStyle]}
-              // Impede que o clique na "gaveta" feche o modal
-              onStartShouldSetResponder={() => true} 
-            >
-              {/* 1. O GestureDetector agora envolve APENAS o cabeçalho */}
-              <GestureDetector gesture={panGesture}>
-                <View>
-                  <View style={styles.handleContainer}>
-                    <View style={styles.handle} />
-                  </View>
-                  <View style={styles.header}>
-                    <Text style={styles.title}>{title}</Text>
-                    <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                      <Feather name="x" size={24} color={Colors.GRAY} />
-                    </TouchableOpacity>
-                  </View>
+        <View style={styles.modalOverlay}>
+          <Pressable 
+            style={styles.overlayPressable} 
+            onPress={handleClose}
+          />
+          
+          <Animated.View style={[styles.modalContentWrapper, animatedStyle]}>
+            {/* Header arrastável com GestureDetector */}
+            <GestureDetector gesture={panGesture}>
+              <View style={styles.draggableHeader}>
+                <View style={styles.handleContainer}>
+                  <View style={styles.handle} />
                 </View>
-              </GestureDetector>
+                <View style={styles.header}>
+                  <Text style={styles.title}>{title}</Text>
+                  <TouchableOpacity 
+                    onPress={handleClose} 
+                    style={styles.closeButton}
+                    activeOpacity={0.7}
+                  >
+                    <Feather name="x" size={24} color={Colors.GRAY} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </GestureDetector>
 
-              {/* 2. O ScrollView fica FORA do GestureDetector */}
-              <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.contentContainer}
-                bounces={false}
-              >
-                <Image source={require("../assets/images/logo-easy-donate-black.webp")} style={styles.logoImage} />
-                <MarkdownText content={content} />
-              </ScrollView>
-            </Animated.View>
-        </Pressable>
+            {/* ScrollView livre de conflitos */}
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.contentContainer}
+              showsVerticalScrollIndicator={true}
+              scrollEventThrottle={16}
+              bounces={true}
+              alwaysBounceVertical={false}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled={true}
+            >
+              <Image
+                source={require('../assets/images/logo-easy-donate-black.webp')}
+                style={styles.logoImage}
+              />
+              <MarkdownText content={content} />
+            </ScrollView>
+          </Animated.View>
+        </View>
       </GestureHandlerRootView>
     </Modal>
   );
 };
 
-
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        justifyContent: 'flex-end',
-    },
-    modalContentWrapper: {
-        height: MODAL_HEIGHT,
-        width: '100%',
-        backgroundColor: Colors.WHITE,
-        borderTopRightRadius: 20,
-        borderTopLeftRadius: 20,
-        overflow: 'hidden', // Garante que o conteúdo não vaze das bordas arredondadas
-    },
-    handleContainer: {
-        paddingTop: 15,
-        alignItems: 'center',
-    },
-    handle: {
-        width: 40,
-        height: 5,
-        borderRadius: 2.5,
-        backgroundColor: '#CCC',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingBottom: 15,
-        paddingTop: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEE',
-    },
-    title: {
-        color: Colors.ORANGE,
-        fontSize: 18,
-        fontFamily: 'Montserrat-Bold',
-        textAlign: 'center',
-    },
-    closeButton: {
-        position: 'absolute',
-        right: 15,
-        padding: 5,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    contentContainer: {
-        padding: 20,
-    },
-    logoImage: {
-        width: 150,
-        height: 43,
-        resizeMode: 'contain',
-        alignSelf: 'center',
-        marginBottom: 25,
-    },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  overlayPressable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: MODAL_HEIGHT,
+  },
+  modalContentWrapper: {
+    height: MODAL_HEIGHT,
+    width: '100%',
+    backgroundColor: Colors.WHITE,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    overflow: 'hidden',
+  },
+  draggableHeader: {
+    // Container que engloba handle + header para o gesture
+  },
+  handleContainer: {
+    paddingTop: 15,
+    paddingBottom: 5,
+    alignItems: 'center',
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CCC',
+    opacity: 0.6,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    paddingTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  title: {
+    color: Colors.ORANGE,
+    fontSize: 18,
+    fontFamily: 'Montserrat-Bold',
+    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 15,
+    padding: 8,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 25,
+    minHeight: MODAL_HEIGHT * 0.8,
+  },
+  logoImage: {
+    width: 150,
+    height: 43,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+    marginBottom: 25,
+  },
 });
-
 
 export default LegalModal;
