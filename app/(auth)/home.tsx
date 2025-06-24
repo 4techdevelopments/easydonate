@@ -175,7 +175,7 @@ export default function Home() {
 
                 <View style={styles.TextOngs}>
                   <Text style={styles.Ong}>ONGs</Text>
-                  <Text style={styles.Sugeridas}>sugeridas</Text>
+                  <Text style={styles.Sugeridas}>cadastradas</Text>
                 </View>
 
                 {filteredOngs.length === 0 ? (

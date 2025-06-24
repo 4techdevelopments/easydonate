@@ -610,7 +610,7 @@ export default React.memo(function Cadastro() {
                                                 )}
 
                                                 {/* Para o campo de Data de Nascimento, a estrutura também é atualizada */}
-                                                <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowDatePicker(true)}>
+                                                <TouchableOpacity activeOpacity={.6} style={styles.dateInputContainer} onPress={() => setShowDatePicker(true)}>
                                                     <CustomInput
                                                         label="Data de nascimento*"
                                                         inputProps={{
@@ -681,7 +681,7 @@ export default React.memo(function Cadastro() {
                                                         maxLength: 255,
                                                         value: complementoDoador,
                                                         onChangeText: setComplementoDoador,
-                                                        keyboardType: "number-pad"
+                                                        keyboardType: "default"
                                                     }}
 
                                                 />
@@ -769,7 +769,7 @@ export default React.memo(function Cadastro() {
                                                         placeholder: "Crie sua senha de acesso",
                                                         value: senhaDoador,
                                                         onChangeText: setSenhaDoador,
-                                                        textContentType: "password"
+                                                        textContentType: "newPassword"
                                                     }}
                                                 />
 

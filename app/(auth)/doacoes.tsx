@@ -302,7 +302,7 @@ export default function Doacoes() {
                                         <Text style={styles.TextVamos}>Histórico de</Text>
                                         <Text style={styles.TextDoar}>Doações</Text>
                                     </View>
-                                    <TouchableOpacity style={styles.BtnNovaDoacao}>
+                                    <TouchableOpacity style={styles.BtnNovaDoacao} onPress={() => router.push('/(auth)/home')}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <MaterialIcons name="library-add" size={20} color="white" style={{ marginRight: 5 }} />
                                             <Text style={styles.TxtNovaDoacao}> Nova doação </Text>

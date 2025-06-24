@@ -150,9 +150,9 @@ export default React.memo(function Login() {
                                 }}
                             />
 
-                            <TouchableOpacity style={styles.forgotPasswordButton}>
+                            {/* <TouchableOpacity style={styles.forgotPasswordButton}>
                                 <Text style={styles.forgotPasswordText}>{Logar.esqueceu_senha}</Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
 
                             <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                                 <Text style={styles.loginButtonText}>{Logar.login}</Text>
