@@ -21,22 +21,55 @@ export default function Conta() {
 
     const [nome, setNome] = useState(usuario?.nome || '');
     const [email, setEmail] = useState(usuario?.email || '');
-    const [nomeSocial, setNomeSocial] = useState(usuario?.nomeSocial || '');
+    const [senha, setSenha] = useState('');
+    const [senha2, setSenha2] = useState('');
+    const [confirmarSenha, setConfirmarSenha] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
+        if (!email || !senha || !senha2 || !confirmarSenha) {
+            mostrarModalFeedback('Preencha todos os campos para realizar a alteração dos dados!', 'error', undefined);
+            return;
+        }
+
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        if (!emailRegex.test(email)) {
+            mostrarModalFeedback("Digite um e-mail válido!", 'error', undefined);
+            return;
+        }
+
+        const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        if (!senhaRegex.test(senha)) {
+            mostrarModalFeedback("A senha deve conter no mínimo 8 caracteres e incluir pelo menos uma letra maiúscula, um número e um caractere especial!", 'error', undefined);
+            return;
+        }
+
+        if (!confirmarSenha) {
+            mostrarModalFeedback('Confirme a senha para realizar a alteração dos dados!', 'error', undefined);
+            return;
+        }
+
+        if (senha2 !== senha) {
+            mostrarModalFeedback('As senhas não coincidem!', 'error', undefined);
+            return;
+        }
+
         setIsSaving(true);
+
         const dadosParaSalvar = {
-            ...usuario,
-            nome,
             email,
-            nomeSocial,
+            senha,
+            confirmarSenha,
         };
 
         try {
-            await api.put(`/Doador`, { ...dadosParaSalvar, idDoador: usuario.idDoador });
-            atualizarUsuario(dadosParaSalvar);
-            mostrarModalFeedback('Dados salvos com sucesso!', 'success');
+            const response = await api.put(`/Usuario/${usuario.id}`, dadosParaSalvar);
+
+            if (response.status === 200) {
+                atualizarUsuario(dadosParaSalvar);
+                mostrarModalFeedback('Dados salvos com sucesso!', 'success', undefined);
+            }
+
         } catch (error) {
             console.error("Erro ao salvar dados:", error);
             mostrarModalFeedback('Erro ao salvar os dados. Tente novamente.', 'error');
@@ -75,14 +108,15 @@ export default function Conta() {
                             </View>
 
                             <View style={styles.dataSection}>
-                                <ProfileDataField label="Nome Completo" value={nome} onChangeText={setNome} />
-                                <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
-                                <ProfileDataField label="Nome Social" value={nomeSocial} onChangeText={setNomeSocial} />
-
                                 <View style={styles.fieldContainer}>
-                                    <Text style={styles.label}>CPF</Text>
-                                    <Text style={styles.valueText}>{usuario?.cpf || 'Não informado'}</Text>
+                                    <Text style={styles.label}>Nome</Text>
+                                    <Text style={styles.valueText}>{usuario?.nome || 'Não informado'}</Text>
                                 </View>
+
+                                <ProfileDataField label="Email" value={email} onChangeText={setEmail} />
+                                <ProfileDataField label="Senha" value={senha} onChangeText={setSenha} />
+                                <ProfileDataField label="Repita a Senha" value={senha2} onChangeText={setSenha2} />
+                                <ProfileDataField label="Confirme a Senha" value={confirmarSenha} onChangeText={setConfirmarSenha} />
                             </View>
                         </ScrollView>
 

@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "easydonate",
     "slug": "easydonate",
@@ -35,6 +35,9 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "extra": {
+      "apiUrl": process.env.API_URL || "http://10.64.44.19:5062",
+    },
     "plugins": [
       "expo-router",
       [
@@ -51,4 +54,4 @@
       "typedRoutes": true
     }
   }
-}
+};
