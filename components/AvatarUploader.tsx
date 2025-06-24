@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 import api from '@/api/axios';
+import { Avatar } from "@/constants/constants";
 import { useAuth } from '@/routes/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from './Colors';
@@ -22,7 +23,7 @@ import PhotoPickerModal from './PhotoPickerModal';
 
 // A importação do ImageManipulator e MaterialIcons foi removida.
 
-const IMG_BB_API_KEY = "TOKEN";
+const AVTK = Avatar.imgbb;
 
 interface AvatarUploaderProps {
     size?: number;
@@ -70,7 +71,7 @@ export function AvatarUploader({ size = 60 }: AvatarUploaderProps) {
             });
             const formData = new FormData();
             formData.append("image", base64);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_API_KEY}`, {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${AVTK}`, {
                 method: "POST",
                 body: formData,
             });
