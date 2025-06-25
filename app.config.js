@@ -36,7 +36,7 @@ export default {
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "apiUrl": process.env.API_URL || "http://10.64.44.19:5062",
+      "apiUrl": process.env.API_URL || "URL",
     },
     "plugins": [
       "expo-router",
